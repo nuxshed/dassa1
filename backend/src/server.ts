@@ -4,6 +4,7 @@ import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
 import connectDB from './config/db';
+import authRoutes from './routes/auth'
 
 dotenv.config();
 
@@ -16,6 +17,7 @@ app.use(express.json());
 app.use(cors());
 app.use(helmet());
 app.use(morgan('dev'));
+app.use("/api/auth", authRoutes);
 
 app.get('/', (req: Request, res: Response) => {
   res.send('api running');
