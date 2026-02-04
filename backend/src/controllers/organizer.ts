@@ -14,7 +14,7 @@ export const listpublic = async (req: Request, res: Response) => {
 
 export const getpublic = async (req: Request, res: Response) => {
   try {
-    const org = await Organizer.findById(req.params.orgId).select('-password');
+    const org = await Organizer.findById(req.params.orgid).select('-password');
 
     if (!org) {
       return res.status(404).json({ message: 'not found' });
@@ -34,7 +34,7 @@ export const togglefollow = async (req: Request, res: Response) => {
       return res.status(404).json({ message: 'participant not found' });
     }
 
-    const orgid = req.params.orgId;
+    const orgid = req.params.orgid;
     const idx = participant.following.indexOf(orgid as any);
 
     if (idx > -1) {

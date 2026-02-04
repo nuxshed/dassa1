@@ -47,13 +47,11 @@ export const listorganizers = async (req: Request, res: Response) => {
 
 export const deleteorganizer = async (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
-    
-    const org = await Organizer.findById(id);
+    const org = await Organizer.findById(req.params.orgid);
     if (!org) {
       return res.status(404).json({ message: 'organizer not found' });
     }
-    await Organizer.findByIdAndDelete(id);
+    await Organizer.findByIdAndDelete(req.params.orgid);
     res.json({ message: 'organizer removed' });
   } catch (err) {
     res.status(500).json({ message: 'server error' });

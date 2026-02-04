@@ -9,6 +9,6 @@ router.use(authorize('Admin'));
 
 router.post('/organizers', createorganizer);
 router.get('/organizers', listorganizers);
-router.delete('/organizer/:id', deleteorganizer);
+router.delete('/organizers/:orgid', deleteorganizer);
 
 export default router;
