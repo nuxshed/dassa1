@@ -1,6 +1,8 @@
 import { Request, Response } from 'express';
 import bcrypt from 'bcrypt';
-import { Organizer, Participant } from '../models/user'
+import { Organizer, Participant } from '../models/user';
+import { resetrequest } from '../models/resetrequest';
+import { createresetschema } from '../schemas/resetreq';
 import { z } from 'zod';
 
 export const listpublic = async (req: Request, res: Response) => {
@@ -87,3 +89,69 @@ export const updateownprofile = async (req: Request, res: Response) => {
     res.status(500).json({ message: 'server error' });
   }
 };
+
+export const getresetstatus = async (req: Request, res: Response) => {
+  try {
+    const request = await resetrequest.findOne({ organizer: req.user?._id }).sort({ createdat: -1 });
+
+    if (!request) {
+      return res.json({
+        status: 'none',
+        message: 'no reset requests found',
+      });
+    }
+
+    const response: any = {
+      requestid: request._id,
+      status: request.status,
+      createdat: request.createdat,
+      reason: request.reason
+    };
+
+    if (request.status === 'approved' || request.status === 'rejected') {
+      response.resolvedat = request.resolvedat;
+      if (request.note) {
+        response.note = request.note;
+      }
+    }
+
+    res.json(response);
+  } catch (err) {
+    res.status(500).json({ message: 'server error' });
+  }
+};
+
+export const createresetrequest = async (req: Request, res: Response) => {
+  try {
+    const result = createresetschema.safeParse(req.body);
+    if (!result.success) {
+      return res.status(400).json({ error: result.error.issues });
+    }
+
+    const existing = await resetrequest.findOne({
+      organizer: req.user?._id,
+      status: 'pending'
+    });
+
+    if (existing) {
+      return res.status(400).json({
+        message: 'you already have a pending request',
+        requestid: existing._id
+      });
+    }
+
+    const request = await resetrequest.create({
+      organizer: req.user?._id,
+      reason: result.data.reason,
+      status: 'pending'
+    });
+
+    res.status(201).json({
+      message: 'reset request submitted',
+      requestid: request._id,
+      createdat: request.createdat
+    });
+  } catch (err) {
+    res.status(500).json({ message: 'server error' });
+  }
+}
