@@ -6,6 +6,8 @@ import morgan from 'morgan';
 import connectDB from './config/db';
 import authRoutes from './routes/auth';
 import adminRoutes from './routes/admin';
+import userRoutes from './routes/user';
+// import organizerRoutes from './routes/organizer'
 
 dotenv.config();
 
@@ -20,6 +22,9 @@ app.use(helmet());
 app.use(morgan('dev'));
 app.use("/api/auth", authRoutes);
 app.use("/api/admin", adminRoutes);
+app.use("/api/users", userRoutes);
+// app.use("/api/organizers", organizerRoutes);
+
 
 app.get('/', (req: Request, res: Response) => {
   res.send('api running');
