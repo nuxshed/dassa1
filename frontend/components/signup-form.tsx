@@ -56,7 +56,7 @@ export function SignupForm({
     seterror('');
     try {
       const type = isiiit ? 'IIIT' : 'External';
-      const result = await apicall('/api/auth/signup', {
+      const result = await apicall('/api/auth/register', {
         method: 'POST',
         body: { ...data, type },
       });
