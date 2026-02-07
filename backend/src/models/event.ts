@@ -13,9 +13,11 @@ export interface IEvent extends Document {
   limit: number;
   organizer: mongoose.Types.ObjectId;
   tags: string[];
+  status: 'draft' | 'published' | 'ongoing' | 'completed' | 'cancelled';
+  regcount: number;
 }
 
-const EventSchema = new Schema<IEvent>({
+const eventschema = new Schema<IEvent>({
   name: { type: String, required: true },
   description: { type: String },
   type: { type: String, enum: ['Normal', 'Merchandise'], required: true },
@@ -28,20 +30,31 @@ const EventSchema = new Schema<IEvent>({
   limit: { type: Number, required: true },
   organizer: { type: Schema.Types.ObjectId, ref: 'User', required: true },
   tags: [{ type: String }],
+  status: { 
+    type: String, 
+    enum: ['draft', 'published', 'ongoing', 'completed', 'cancelled'],
+    default: 'draft'
+  },
+  regcount: { type: Number, default: 0 }
 }, { discriminatorKey: 'type', timestamps: true });
 
-export const Event = mongoose.model<IEvent>('Event', EventSchema);
+eventschema.index({ organizer: 1, status: 1 });
+eventschema.index({ status: 1, 'dates.start': 1 });
+eventschema.index({ tags: 1 });
+eventschema.index({ name: 'text', description: 'text' });
 
-export const NormalEvent = Event.discriminator('Normal', new Schema({
+export const event = mongoose.model<IEvent>('event', eventschema);
+
+export const normalevent = event.discriminator('Normal', new Schema({
   fee: { type: Number, default: 0 },
-  formSchema: { type: Schema.Types.Mixed }, 
+  formschema: { type: Schema.Types.Mixed }, 
 }));
 
-export const MerchEvent = Event.discriminator('Merchandise', new Schema({
+export const merchevent = event.discriminator('Merchandise', new Schema({
   variants: [{ 
     size: String, 
     color: String,
     stock: { type: Number, required: true, min: 0 }
   }],
-  purchaseLimit: { type: Number, default: 1 },
+  purchaselimit: { type: Number, default: 1 },
 }));

@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-const EventBase = z.object({
+const basevent = z.object({
   name: z.string().min(1),
   description: z.string(),
   eligibility: z.string(), // FIXME: switch to something else once you understand
@@ -8,28 +8,52 @@ const EventBase = z.object({
     start: z.coerce.date(),
     end: z.coerce.date(),
     deadline: z.coerce.date(),
+  }).refine(d => d.deadline <= d.start, {
+    message: 'deadline must be before start'
+  }).refine(d => d.start < d.end, {
+    message: 'start must be before end'
   }),
   limit: z.number().int().positive(),
   tags: z.array(z.string()),
 });
 
-export const CreateNormalEventSchema = EventBase.extend({
+export const createnormaleventschema = basevent.extend({
   type: z.literal("Normal"),
   fee: z.number().min(0),
   formSchema: z.json().optional(),
 });
 
-export const CreateMerchEventSchema = EventBase.extend({
+export const createmercheventschema = basevent.extend({
   type: z.literal("Merchandise"),
   variants: z.array(z.object({
     size: z.string(),
     color: z.string(),
     stock: z.number().int().min(0),
   })),
-  purchaseLimit: z.number().int().default(1),
+  purchaseLimit: z.number().int().min(1).default(1),
 });
 
-export const CreateEventSchema = z.discriminatedUnion("type", [
-  CreateNormalEventSchema, 
-  CreateMerchEventSchema
+export const createventschema = z.discriminatedUnion("type", [
+  createnormaleventschema, 
+  createmercheventschema
 ]);
+
+export const updateventschema = z.object({
+  description: z.string().min(10).optional(),
+  'dates.deadline': z.coerce.date().optional(),
+  limit: z.number().int().min(1).optional(),
+  status: z.enum(['published', 'ongoing', 'completed', 'cancelled']).optional()
+}).strict();
+
+export const formschema = z.object({
+  fields: z.array(z.object({
+    label: z.string().min(1),
+    type: z.enum(['text', 'email', 'number', 'select', 'file', 'textarea']),
+    required: z.boolean().default(false),
+    options: z.array(z.string()).optional()
+  })).min(1)
+});
+
+export const registerschema = z.object({
+  formdata: z.array(z.any()).optional()
+});

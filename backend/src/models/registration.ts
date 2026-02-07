@@ -4,16 +4,24 @@ export interface IRegistration extends Document {
   user: mongoose.Types.ObjectId;
   event: mongoose.Types.ObjectId;
   status: 'Registered' | 'Purchased' | 'Cancelled';
-  ticketId: string;
-  checkIn: boolean;
+  ticketid: string;
+  checkin: boolean;
+  formdata?: any[];
+  createdAt: Date;
+  updatedAt: Date;
 }
 
-const RegistrationSchema = new Schema<IRegistration>({
+const registrationschema = new Schema<IRegistration>({
   user: { type: Schema.Types.ObjectId, ref: 'User', required: true },
   event: { type: Schema.Types.ObjectId, ref: 'Event', required: true },
-  status: { type: String, enum: ['Registered', 'Purchased', 'Cancelled'], required: true },
-  ticketId: { type: String, required: true, unique: true },
-  checkIn: { type: Boolean, default: false },
+  status: { type: String, enum: ['Registered', 'Purchased', 'Cancelled'], default: 'Registered' },
+  ticketid: { type: String, required: true, unique: true },
+  checkin: { type: Boolean, default: false },
+  formdata: { type: Schema.Types.Mixed },
 }, { timestamps: true });
 
-export const Registration = mongoose.model<IRegistration>('Registration', RegistrationSchema);
+registrationschema.index({ user: 1, event: 1 }, { unique: true });
+registrationschema.index({ event: 1, status: 1 });
+registrationschema.index({ ticketid: 1 });
+
+export const registration = mongoose.model<IRegistration>('Registration', registrationschema);
