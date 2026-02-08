@@ -113,9 +113,9 @@ export const updatevent = async (req: Request, res: Response) => {
 
     const ev = req.event;
 
-    if (result.data['dates.deadline']) {
-      ev.dates.deadline = result.data['dates.deadline'];
-      delete result.data['dates.deadline'];
+    if (result.data.dates) {
+      ev.dates = { ...ev.dates, ...result.data.dates };
+      delete (result.data as any).dates;
     }
 
     Object.assign(ev, result.data);

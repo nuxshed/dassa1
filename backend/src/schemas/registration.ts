@@ -19,3 +19,11 @@ export const RegistrationSchema = z.discriminatedUnion('type', [
   RegisterNormalEventSchema,
   RegisterMerchEventSchema,
 ]);
+
+export const uploadproofschema = z.object({
+  proofUrl: z.url()
+});
+
+export const updatepaymentstatusschema = z.object({
+  status: z.enum(['Purchased', 'Rejected'])
+});

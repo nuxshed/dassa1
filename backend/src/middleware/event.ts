@@ -42,13 +42,22 @@ export const caneditevent = (req: Request, res: Response, next: NextFunction) =>
   }
 
   if (ev.status === 'published') {
-    const allowed = ['description', 'dates.deadline', 'limit', 'status'];
+    const allowed = ['description', 'dates', 'limit', 'status', 'variants'];
     const keys = Object.keys(req.body);
 
     if (keys.some(k => !allowed.includes(k))) {
       return res.status(400).json({ 
         message: 'can only edit description, deadline, limit, or status when published' 
       });
+    }
+
+    if (req.body.dates) {
+       const dkeys = Object.keys(req.body.dates);
+       if (dkeys.some(k => k !== 'deadline')) {
+         return res.status(400).json({ 
+           message: 'can only edit deadline in dates when published' 
+         });
+       }
     }
 
     if (req.body.limit && req.body.limit < ev.regcount) {

@@ -40,9 +40,16 @@ export const createventschema = z.discriminatedUnion("type", [
 
 export const updateventschema = z.object({
   description: z.string().min(10).optional(),
-  'dates.deadline': z.coerce.date().optional(),
+  dates: z.object({
+    deadline: z.coerce.date().optional()
+  }).optional(),
   limit: z.number().int().min(1).optional(),
-  status: z.enum(['published', 'ongoing', 'completed', 'cancelled']).optional()
+  status: z.enum(['published', 'ongoing', 'completed', 'cancelled']).optional(),
+  variants: z.array(z.object({
+    size: z.string(),
+    color: z.string(),
+    stock: z.number().int().min(0),
+  })).optional()
 }).strict();
 
 export const formschema = z.object({
