@@ -10,6 +10,8 @@ import userRoutes from './routes/user';
 import organizerRoutes from './routes/organizer';
 import eventRoutes from './routes/event';
 import registrationRoutes from './routes/registration';
+import uploadRoutes from './routes/upload';
+import path from 'path';
 
 dotenv.config();
 
@@ -28,6 +30,7 @@ app.use("/api/users", userRoutes);
 app.use("/api/organizers", organizerRoutes);
 app.use("/api/events", eventRoutes);
 app.use("/api/registrations", registrationRoutes);
+app.use("/api/upload", uploadRoutes);
 
 
 app.get('/', (req: Request, res: Response) => {
