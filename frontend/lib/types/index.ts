@@ -2,7 +2,7 @@ import { z } from 'zod'
 
 export const role = z.enum(['Participant', 'Organizer', 'Admin'])
 export const eventstatus = z.enum(['draft', 'published', 'ongoing', 'completed', 'cancelled'])
-export const eventtype = z.enum(['normal', 'merchandise'])
+export const eventtype = z.enum(['Normal', 'Merchandise'])
 export const regstatus = z.enum(['Registered', 'Pending', 'Confirmed', 'Cancelled'])
 export const eligibility = z.enum(['all', 'iiit', 'external'])
 

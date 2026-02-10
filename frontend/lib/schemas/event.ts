@@ -3,7 +3,7 @@ import { z } from 'zod'
 export const eventcreateschema = z.object({
   name: z.string().min(3, 'min 3 chars'),
   description: z.string().min(10, 'describe your event'),
-  type: z.enum(['normal', 'merchandise']),
+  type: z.enum(['Normal', 'Merchandise']),
   eligibility: z.enum(['all', 'iiit', 'external']),
   deadline: z.string().min(1, 'required'),
   start: z.string().min(1, 'required'),

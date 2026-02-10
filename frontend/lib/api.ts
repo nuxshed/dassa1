@@ -1,6 +1,6 @@
 const apiurl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
-interface apioptions {
+export interface apioptions {
   method?: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH';
   body?: any;
   token?: string | null;
