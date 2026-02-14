@@ -30,7 +30,6 @@ export default function EventsPage() {
         <div className="flex items-end justify-between">
           <div className="space-y-1">
             <h1 className="text-3xl font-bold tracking-tight">Events</h1>
-            <p className="text-muted-foreground text-lg">Browse and register for upcoming events.</p>
           </div>
         </div>
 

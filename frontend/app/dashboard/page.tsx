@@ -28,7 +28,6 @@ export default function DashboardPage() {
       <div className="max-w-5xl mx-auto space-y-8 py-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
-          <p className="text-muted-foreground text-lg">Your events and registrations</p>
         </div>
 
         <Tabs defaultValue="upcoming" className="space-y-8">

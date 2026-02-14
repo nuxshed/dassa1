@@ -35,7 +35,7 @@ const navconfig: Record<string, { href: string; label: string; icon: React.React
   Participant: [
     { href: '/dashboard', label: 'Dashboard', icon: <LayoutDashboard className="h-5 w-5" /> },
     { href: '/events', label: 'Events', icon: <Calendar className="h-5 w-5" /> },
-    { href: '/clubs', label: 'Clubs', icon: <Users className="h-5 w-5" /> },
+    { href: '/organizers', label: 'Organizers', icon: <Users className="h-5 w-5" /> },
     { href: '/profile', label: 'Profile', icon: <UserCircle className="h-5 w-5" /> },
   ],
   Organizer: [

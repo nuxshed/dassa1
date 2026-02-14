@@ -8,7 +8,11 @@ import { z } from 'zod';
 export const listpublic = async (req: Request, res: Response) => {
   try {
     const orgs = await Organizer.find().select('-password');
-    res.json(orgs);
+    const orgsWithFollowers = await Promise.all(orgs.map(async (org) => {
+      const followers = await Participant.countDocuments({ following: org._id });
+      return { ...org.toObject(), followers };
+    }));
+    res.json(orgsWithFollowers);
   } catch (e) {
     res.status(500).json({ message: 'server error' });
   }
