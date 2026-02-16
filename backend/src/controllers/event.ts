@@ -129,6 +129,17 @@ export const updatevent = async (req: Request, res: Response) => {
   }
 };
 
+export const deletevent = async (req: Request, res: Response) => {
+  try {
+    const ev = req.event;
+    await registration.deleteMany({ event: ev._id });
+    await event.findByIdAndDelete(ev._id);
+    res.json({ message: 'event deleted' });
+  } catch (err) {
+    res.status(500).json({ message: 'server error' });
+  }
+};
+
 export const getform = async (req: Request, res: Response) => {
   try {
     const ev = await normalevent.findById(req.params.eventid);

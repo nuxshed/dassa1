@@ -64,7 +64,7 @@ export function FloatingSidebar() {
   return (
     <>
       <TooltipProvider delayDuration={0}>
-        <aside className="fixed left-4 top-1/2 -translate-y-1/2 z-50 flex flex-col gap-2 p-2 rounded-2xl bg-card/80 backdrop-blur-lg border shadow-lg">
+        <aside className="fixed bottom-0 left-0 right-0 z-50 flex items-center justify-center gap-1 p-2 bg-card/80 backdrop-blur-lg border-t md:bottom-auto md:left-4 md:right-auto md:top-1/2 md:-translate-y-1/2 md:flex-col md:gap-2 md:rounded-2xl md:border md:border-t-0 md:shadow-lg">
               <LayoutGroup>
                 {links.map(l => {
                   const isActive = path === l.href
@@ -94,7 +94,7 @@ export function FloatingSidebar() {
                           </Button>
                         </Link>
                       </TooltipTrigger>
-                      <TooltipContent side="right" sideOffset={8}>
+                      <TooltipContent side="right" sideOffset={8} className="hidden md:block">
                         {l.label}
                       </TooltipContent>
                     </Tooltip>
@@ -104,50 +104,63 @@ export function FloatingSidebar() {
         </aside>
       </TooltipProvider>
 
-      <div className="fixed left-6 bottom-4 z-50">
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="relative h-10 w-10 rounded-xl hover:bg-transparent p-0">
-              <Avatar className="h-10 w-10 border-2 border-border hover:border-primary/50 transition-colors cursor-pointer bg-card shadow-sm">
-                <AvatarFallback className="bg-primary/10 text-primary font-semibold text-xs">
-                  {initials}
-                </AvatarFallback>
-              </Avatar>
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent className="w-56 ml-2" align="end" side="right" sideOffset={4}>
-            <DropdownMenuLabel className="font-normal">
-              <div className="flex flex-col space-y-1">
-                <p className="text-sm font-medium leading-none">{user.firstName || 'User'}</p>
-                <p className="text-xs leading-none text-muted-foreground">{user.email}</p>
-              </div>
-            </DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem asChild className="cursor-pointer">
-              <Link href={profileLink}>
-                <UserCircle className="mr-2 h-4 w-4" />
-                Profile
-              </Link>
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-              className="cursor-pointer"
-            >
-              {theme === 'dark' ? (
-                <Sun className="mr-2 h-4 w-4" />
-              ) : (
-                <Moon className="mr-2 h-4 w-4" />
-              )}
-              {theme === 'dark' ? 'Light Mode' : 'Dark Mode'}
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={logout} className="text-destructive focus:text-destructive cursor-pointer">
-              <LogOut className="mr-2 h-4 w-4" />
-              Logout
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+      <div className="fixed left-6 bottom-4 z-50 hidden md:block">
+        <AccountMenu />
       </div>
     </>
+  )
+}
+
+export function AccountMenu() {
+  const { user, logout } = useauth()
+  const { theme, setTheme } = useTheme()
+  if (!user) return null
+
+  const initials = ((user.firstName?.[0] || '') + (user.lastName?.[0] || user.email[0])).toUpperCase()
+  const profileLink = user.role === 'Participant' ? '/profile' : `/${user.role.toLowerCase()}/profile`
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" className="relative h-10 w-10 rounded-xl hover:bg-transparent p-0">
+          <Avatar className="h-10 w-10 border-2 border-border hover:border-primary/50 transition-colors cursor-pointer bg-card shadow-sm">
+            <AvatarFallback className="bg-primary/10 text-primary font-semibold text-xs">
+              {initials}
+            </AvatarFallback>
+          </Avatar>
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent className="w-56 ml-2" align="end" side="right" sideOffset={4}>
+        <DropdownMenuLabel className="font-normal">
+          <div className="flex flex-col space-y-1">
+            <p className="text-sm font-medium leading-none">{user.firstName || 'User'}</p>
+            <p className="text-xs leading-none text-muted-foreground">{user.email}</p>
+          </div>
+        </DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem asChild className="cursor-pointer">
+          <Link href={profileLink}>
+            <UserCircle className="mr-2 h-4 w-4" />
+            Profile
+          </Link>
+        </DropdownMenuItem>
+        <DropdownMenuItem
+          onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+          className="cursor-pointer"
+        >
+          {theme === 'dark' ? (
+            <Sun className="mr-2 h-4 w-4" />
+          ) : (
+            <Moon className="mr-2 h-4 w-4" />
+          )}
+          {theme === 'dark' ? 'Light Mode' : 'Dark Mode'}
+        </DropdownMenuItem>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem onClick={logout} className="text-destructive focus:text-destructive cursor-pointer">
+          <LogOut className="mr-2 h-4 w-4" />
+          Logout
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
   )
 }

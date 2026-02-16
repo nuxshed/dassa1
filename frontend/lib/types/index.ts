@@ -53,6 +53,7 @@ export const eventschema = z.object({
   }),
   registrationLimit: z.number().optional(),
   registrationCount: z.number().optional(),
+  regcount: z.number().optional(),
   fee: z.number().optional(),
   tags: z.array(z.string()).optional(),
 

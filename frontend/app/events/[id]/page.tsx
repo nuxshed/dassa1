@@ -161,9 +161,7 @@ function RegistrationCard({ event, registration, isRegistered }: { event: event,
 
   const handleRegister = async () => {
     try {
-      await mutate({
-         formdata: { ...selectedVariant }
-      })
+      await mutate({})
     } catch (e) {
       toast.error("Failed to register. Please try again.")
     }

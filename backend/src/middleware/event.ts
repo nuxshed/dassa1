@@ -42,7 +42,7 @@ export const caneditevent = (req: Request, res: Response, next: NextFunction) =>
   }
 
   if (ev.status === 'published') {
-    const allowed = ['description', 'dates', 'limit', 'status', 'variants'];
+    const allowed = ['description', 'dates', 'limit', 'fee', 'status', 'variants'];
     const keys = Object.keys(req.body);
 
     if (keys.some(k => !allowed.includes(k))) {

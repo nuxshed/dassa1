@@ -14,7 +14,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Separator } from '@/components/ui/separator'
 import { usemutation } from '@/lib/hooks/usemutation'
 import { eventcreateschema, type eventcreateform } from '@/lib/schemas/event'
-import { Loader2, CalendarIcon } from 'lucide-react'
+import { Loader2, CalendarIcon, ArrowLeft } from 'lucide-react'
 import { format } from 'date-fns'
 import Link from 'next/link'
 
@@ -112,6 +112,10 @@ export default function CreateEvent() {
   return (
     <AppLayout roles={['Organizer']}>
       <div className="max-w-3xl mx-auto py-8">
+        <Link href="/organizer" className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors mb-6">
+          <ArrowLeft className="h-4 w-4" />
+          Back
+        </Link>
         <div className="space-y-2 mb-10">
           <h1 className="text-3xl font-bold tracking-tight">Create Event</h1>
         </div>

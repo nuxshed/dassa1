@@ -44,6 +44,7 @@ export const updateventschema = z.object({
     deadline: z.coerce.date().optional()
   }).optional(),
   limit: z.number().int().min(1).optional(),
+  fee: z.number().min(0).optional(),
   status: z.enum(['published', 'ongoing', 'completed', 'cancelled']).optional(),
   variants: z.array(z.object({
     size: z.string(),
