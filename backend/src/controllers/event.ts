@@ -35,7 +35,7 @@ export const browseevents = async (req: Request, res: Response) => {
   try {
     const { 
       type, 
-      status = 'published', 
+      status, 
       search, 
       tags, 
       organizer,
@@ -45,10 +45,12 @@ export const browseevents = async (req: Request, res: Response) => {
 
     const query: any = {};
 
-    if (req.user?.role !== 'Organizer') {
+    if (!req.user || req.user.role !== 'Organizer') {
       query.status = 'published';
-    } else if (status) {
-      query.status = status;
+    } else {
+      if (status) {
+        query.status = status;
+      }
     }
 
     if (type) query.type = type;

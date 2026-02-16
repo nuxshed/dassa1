@@ -10,7 +10,7 @@ export function usefetch<T = any>(endpoint: string, { skip }: opts = {}) {
   const [data, setdata] = useState<T | null>(null)
   const [loading, setloading] = useState(!skip)
   const [error, seterror] = useState<string | null>(null)
-  const { token } = useauth()
+  const { token, loading: authLoading } = useauth()
 
   const refetch = useCallback(async () => {
     setloading(true)
@@ -26,8 +26,8 @@ export function usefetch<T = any>(endpoint: string, { skip }: opts = {}) {
   }, [endpoint, token])
 
   useEffect(() => {
-    if (!skip) refetch()
-  }, [refetch, skip])
+    if (!skip && !authLoading) refetch()
+  }, [refetch, skip, authLoading])
 
   return { data, loading, error, refetch }
 }

@@ -1,12 +1,12 @@
 import express from 'express';
 import { createvent, browseevents, getevent, updatevent, getform, updateform } from '../controllers/event';
 import { registerevent, listparticipants, exportparticipants } from '../controllers/registration';
-import { protect, authorize } from '../middleware/auth';
+import { protect, authorize, optionalAuth } from '../middleware/auth';
 import { ownevent, caneditevent } from '../middleware/event';
 
 const router = express.Router();
 
-router.get('/', browseevents);
+router.get('/', optionalAuth, browseevents);
 router.get('/:eventid', getevent);
 router.get('/:eventid/form', getform);
 

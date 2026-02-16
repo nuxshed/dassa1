@@ -40,3 +40,16 @@ export const authorize = (...roles: string[]) => {
     next();
   };
 }
+
+export const optionalAuth = async (req: Request, res: Response, next: NextFunction) => {
+  if (req.headers.authorization?.startsWith('Bearer')) {
+    try {
+      const token = req.headers.authorization.split(' ')[1];
+      const decoded = jwt.verify(token, process.env.JWT_SECRET!) as { id: string };
+      req.user = await User.findById(decoded.id).select('-password') as IUser;
+    } catch(error) {
+      // ignore errors, continue wo user
+    }
+  }
+  next();
+};

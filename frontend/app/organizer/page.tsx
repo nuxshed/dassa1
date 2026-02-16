@@ -12,13 +12,29 @@ import type { event } from '@/lib/types'
 import { Plus } from 'lucide-react'
 
 export default function OrganizerDashboard() {
-  const { data, loading, error } = usefetch<{ events: event[] } | event[]>('/api/events')
+  const { data, loading, error } = usefetch<{ events: event[] } | event[]>('/api/events?limit=1000')
 
   const events = Array.isArray(data) ? data : (data?.events || [])
+
+  console.log('[Organizer] Events data:', { 
+    totalEvents: events.length, 
+    events: events.map(e => ({ id: e._id, name: e.name, status: e.status }))
+  })
 
   const drafts = events.filter(e => e.status === 'draft')
   const published = events.filter(e => e.status === 'published')
   const completed = events.filter(e => e.status === 'completed' || e.status === 'ongoing')
+  
+  console.log('[Organizer] Filtered counts:', {
+    total: events.length,
+    drafts: drafts.length,
+    published: published.length,
+    completed: completed.length,
+    statusBreakdown: events.reduce((acc, e) => {
+      acc[e.status] = (acc[e.status] || 0) + 1
+      return acc
+    }, {} as Record<string, number>)
+  })
 
   return (
     <AppLayout roles={['Organizer']}>
@@ -26,7 +42,6 @@ export default function OrganizerDashboard() {
         <div className="flex items-end justify-between">
           <div className="space-y-1">
             <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
-            <p className="text-muted-foreground text-lg">Manage your events and registrations</p>
           </div>
           <Link href="/organizer/create">
             <Button>
