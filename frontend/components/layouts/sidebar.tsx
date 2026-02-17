@@ -43,6 +43,7 @@ const navconfig: Record<string, { href: string; label: string; icon: React.React
     { href: '/organizer/events', label: 'My Events', icon: <FolderKanban className="h-5 w-5" /> },
     { href: '/organizer/create', label: 'Create', icon: <Plus className="h-5 w-5" /> },
     { href: '/organizer/profile', label: 'Profile', icon: <UserCircle className="h-5 w-5" /> },
+    { href: '/organizer/reset-password', label: 'Reset Password', icon: <KeyRound className="h-5 w-5" /> },
   ],
   Admin: [
     { href: '/admin', label: 'Dashboard', icon: <LayoutDashboard className="h-5 w-5" /> },
@@ -61,48 +62,52 @@ export function FloatingSidebar() {
   const initials = ((user.firstName?.[0] || '') + (user.lastName?.[0] || user.email[0])).toUpperCase()
   const profileLink = user.role === 'Participant' ? '/profile' : `/${user.role.toLowerCase()}/profile`
 
+  const showNav = user.role === 'Participant'
+
   return (
     <>
-      <TooltipProvider delayDuration={0}>
-        <aside className="fixed bottom-0 left-0 right-0 z-50 flex items-center justify-center gap-1 p-2 bg-card/80 backdrop-blur-lg border-t md:bottom-auto md:left-4 md:right-auto md:top-1/2 md:-translate-y-1/2 md:flex-col md:gap-2 md:rounded-2xl md:border md:border-t-0 md:shadow-lg">
-              <LayoutGroup>
-                {links.map(l => {
-                  const isActive = path === l.href
-                  return (
-                    <Tooltip key={l.href}>
-                      <TooltipTrigger asChild>
-                        <Link href={l.href} className="relative">
-                          {isActive && (
-                            <motion.div
-                              layoutId="active-tab"
-                              className="absolute inset-0 bg-primary rounded-xl"
-                              initial={false}
-                              transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                            />
-                          )}
-                          <Button
-                            variant="ghost" 
-                            size="icon"
-                            className={cn(
-                              'h-10 w-10 rounded-xl transition-colors relative z-10',
-                              isActive 
-                                ? 'text-primary-foreground hover:!bg-transparent hover:!text-primary-foreground' 
-                                : 'text-muted-foreground hover:bg-muted/10 hover:text-foreground'
+      {showNav && (
+        <TooltipProvider delayDuration={0}>
+          <aside className="fixed bottom-0 left-0 right-0 z-50 flex items-center justify-center gap-1 p-2 bg-card/80 backdrop-blur-lg border-t md:bottom-auto md:left-4 md:right-auto md:top-1/2 md:-translate-y-1/2 md:flex-col md:gap-2 md:rounded-2xl md:border md:border-t-0 md:shadow-lg">
+                <LayoutGroup>
+                  {links.map(l => {
+                    const isActive = path === l.href || (l.href !== '/dashboard' && l.href !== '/organizer' && l.href !== '/admin' && path.startsWith(l.href))
+                    return (
+                      <Tooltip key={l.href}>
+                        <TooltipTrigger asChild>
+                          <Link href={l.href} className="relative">
+                            {isActive && (
+                              <motion.div
+                                layoutId="active-tab"
+                                className="absolute inset-0 bg-primary rounded-xl"
+                                initial={false}
+                                transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                              />
                             )}
-                          >
-                            {l.icon}
-                          </Button>
-                        </Link>
-                      </TooltipTrigger>
-                      <TooltipContent side="right" sideOffset={8} className="hidden md:block">
-                        {l.label}
-                      </TooltipContent>
-                    </Tooltip>
-                  )
-                })}
-              </LayoutGroup>
-        </aside>
-      </TooltipProvider>
+                            <Button
+                              variant="ghost" 
+                              size="icon"
+                              className={cn(
+                                'h-10 w-10 rounded-xl transition-colors relative z-10',
+                                isActive 
+                                  ? 'text-primary-foreground hover:!bg-transparent hover:!text-primary-foreground' 
+                                  : 'text-muted-foreground hover:bg-muted/10 hover:text-foreground'
+                              )}
+                            >
+                              {l.icon}
+                            </Button>
+                          </Link>
+                        </TooltipTrigger>
+                        <TooltipContent side="right" sideOffset={8} className="hidden md:block">
+                          {l.label}
+                        </TooltipContent>
+                      </Tooltip>
+                    )
+                  })}
+                </LayoutGroup>
+          </aside>
+        </TooltipProvider>
+      )}
 
       <div className="fixed left-6 bottom-4 z-50 hidden md:block">
         <AccountMenu />
@@ -144,6 +149,14 @@ export function AccountMenu() {
             Profile
           </Link>
         </DropdownMenuItem>
+        {user.role === 'Organizer' && (
+          <DropdownMenuItem asChild className="cursor-pointer">
+            <Link href="/organizer/reset-password">
+              <KeyRound className="mr-2 h-4 w-4" />
+              Reset Password
+            </Link>
+          </DropdownMenuItem>
+        )}
         <DropdownMenuItem
           onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
           className="cursor-pointer"

@@ -78,3 +78,18 @@ export const registrationschema = z.object({
 })
 
 export type registration = z.infer<typeof registrationschema>
+
+export const resetstatus = z.enum(['pending', 'approved', 'rejected'])
+export type resetstatus = z.infer<typeof resetstatus>
+
+export const resetreqschema = z.object({
+  _id: z.string(),
+  organizer: z.union([z.string(), organizerschema]),
+  status: resetstatus,
+  reason: z.string(),
+  adminNote: z.string().optional(),
+  createdAt: z.string(),
+  updatedAt: z.string().optional()
+})
+
+export type resetrequest = z.infer<typeof resetreqschema>

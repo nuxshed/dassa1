@@ -31,19 +31,21 @@ export default function AdminDashboard() {
         </div>
 
         <div className="grid gap-6 md:grid-cols-3">
-          <Card className="border-muted/60 shadow-none">
-            <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Clubs</CardTitle>
-              <Users className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              {loading ? (
-                <Skeleton className="h-8 w-16" />
-              ) : (
-                <div className="text-2xl font-bold">{organizers.length}</div>
-              )}
-            </CardContent>
-          </Card>
+          <Link href="/admin/clubs">
+            <Card className="border-muted/60 shadow-none cursor-pointer hover:border-foreground/10 transition-all hover:shadow-sm">
+              <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+                <CardTitle className="text-sm font-medium text-muted-foreground">Clubs</CardTitle>
+                <Users className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                {loading ? (
+                  <Skeleton className="h-8 w-16" />
+                ) : (
+                  <div className="text-2xl font-bold">{organizers.length}</div>
+                )}
+              </CardContent>
+            </Card>
+          </Link>
 
           <Card className="border-muted/60 shadow-none">
             <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
@@ -55,15 +57,17 @@ export default function AdminDashboard() {
             </CardContent>
           </Card>
 
-          <Card className="border-muted/60 shadow-none">
-            <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Pending Requests</CardTitle>
-              <KeyRound className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">—</div>
-            </CardContent>
-          </Card>
+          <Link href="/admin/requests">
+            <Card className="border-muted/60 shadow-none cursor-pointer hover:border-foreground/10 transition-all hover:shadow-sm">
+              <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+                <CardTitle className="text-sm font-medium text-muted-foreground">Pending Requests</CardTitle>
+                <KeyRound className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">—</div>
+              </CardContent>
+            </Card>
+          </Link>
         </div>
 
         <section className="space-y-4">
