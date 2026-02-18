@@ -12,29 +12,12 @@ import type { event } from '@/lib/types'
 import { Plus } from 'lucide-react'
 
 export default function OrganizerDashboard() {
-  const { data, loading, error } = usefetch<{ events: event[] } | event[]>('/api/events?limit=1000')
-
-  const events = Array.isArray(data) ? data : (data?.events || [])
-
-  console.log('[Organizer] Events data:', { 
-    totalEvents: events.length, 
-    events: events.map(e => ({ id: e._id, name: e.name, status: e.status }))
-  })
+  const { data, loading, error } = usefetch<{ events: event[] }>('/api/events?limit=1000')
+  const events = data?.events || []
 
   const drafts = events.filter(e => e.status === 'draft')
   const published = events.filter(e => e.status === 'published')
   const completed = events.filter(e => e.status === 'completed' || e.status === 'ongoing')
-  
-  console.log('[Organizer] Filtered counts:', {
-    total: events.length,
-    drafts: drafts.length,
-    published: published.length,
-    completed: completed.length,
-    statusBreakdown: events.reduce((acc, e) => {
-      acc[e.status] = (acc[e.status] || 0) + 1
-      return acc
-    }, {} as Record<string, number>)
-  })
 
   return (
     <AppLayout roles={['Organizer']}>
@@ -154,7 +137,7 @@ function EventCard({ event: ev }: { event: event }) {
         <CardContent className="space-y-2 mt-auto">
           <div className="flex items-center justify-between text-sm py-2 border-t border-border/50">
             <span className="text-muted-foreground">Registrations</span>
-            <span className="font-medium">{ev.registrationCount || 0} / {ev.registrationLimit || '∞'}</span>
+            <span className="font-medium">{ev.regcount || 0} / {ev.limit || '∞'}</span>
           </div>
           <div className="flex items-center justify-between text-sm">
             <span className="text-muted-foreground">Status</span>

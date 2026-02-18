@@ -41,6 +41,7 @@ export interface IOrganizer extends IUser {
   category: string;
   description?: string;
   contact: string;
+  disabled: boolean;
 }
 
 const OrganizerSchema = new Schema<IOrganizer>({
@@ -48,6 +49,7 @@ const OrganizerSchema = new Schema<IOrganizer>({
   category: { type: String, required: true },
   description: { type: String },
   contact: { type: String, required: true },
+  disabled: { type: Boolean, default: false },
 });
 
 export const Organizer = User.discriminator<IOrganizer>('Organizer', OrganizerSchema);

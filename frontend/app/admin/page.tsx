@@ -11,8 +11,11 @@ import type { organizer } from '@/lib/types'
 import { Users, Plus, Calendar, KeyRound } from 'lucide-react'
 
 export default function AdminDashboard() {
-  const { data, loading } = usefetch<{ organizers: organizer[] } | organizer[]>('/api/admin/organizers')
-  const organizers = Array.isArray(data) ? data : (data?.organizers || [])
+  const { data, loading } = usefetch<organizer[]>('/api/admin/organizers')
+  const organizers = data || []
+
+  const { data: events, loading: eventsLoading } = usefetch<any[]>('/api/events?limit=1000')
+  const { data: requests, loading: requestsLoading } = usefetch<any[]>('/api/admin/requests')
 
   return (
     <AppLayout roles={['Admin']}>
@@ -20,9 +23,8 @@ export default function AdminDashboard() {
         <div className="flex items-end justify-between">
           <div className="space-y-1">
             <h1 className="text-3xl font-bold tracking-tight">Admin Dashboard</h1>
-            <p className="text-muted-foreground text-lg">System overview and management</p>
           </div>
-          <Link href="/admin/clubs">
+          <Link href="/admin/clubs/create">
             <Button>
               <Plus className="h-4 w-4 mr-2" />
               Add Club
@@ -53,7 +55,11 @@ export default function AdminDashboard() {
               <Calendar className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">—</div>
+              {eventsLoading ? (
+                <Skeleton className="h-8 w-16" />
+              ) : (
+                <div className="text-2xl font-bold">{events?.length ?? 0}</div>
+              )}
             </CardContent>
           </Card>
 
@@ -64,7 +70,11 @@ export default function AdminDashboard() {
                 <KeyRound className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">—</div>
+                {requestsLoading ? (
+                  <Skeleton className="h-8 w-16" />
+                ) : (
+                  <div className="text-2xl font-bold">{requests?.length ?? 0}</div>
+                )}
               </CardContent>
             </Card>
           </Link>

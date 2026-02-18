@@ -10,7 +10,7 @@ import { Badge } from '@/components/ui/badge'
 import { Textarea } from '@/components/ui/textarea'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import { KeyRound, CheckCircle2, XCircle, Copy, Check, ArrowLeft } from 'lucide-react'
+import { KeyRound, CheckCircle2, XCircle, Copy, Check, X } from 'lucide-react'
 import Link from 'next/link'
 
 interface resetreq {
@@ -80,13 +80,15 @@ export default function AdminRequestsPage() {
   return (
     <AppLayout roles={['Admin']}>
       <div className="max-w-5xl mx-auto space-y-8 py-4">
-        <div className="space-y-1">
-          <Link href="/admin" className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground transition-colors mb-2">
-            <ArrowLeft className="h-4 w-4 mr-1" />
-            Back to Dashboard
+        <div className="flex items-start justify-between">
+          <div className="space-y-1">
+            <h1 className="text-3xl font-bold tracking-tight">Password Reset Requests</h1>
+          </div>
+          <Link href="/admin">
+            <Button variant="ghost" size="icon">
+              <X className="h-5 w-5" />
+            </Button>
           </Link>
-          <h1 className="text-3xl font-bold tracking-tight">Password Reset Requests</h1>
-          <p className="text-muted-foreground text-lg">Review and manage organizer password reset requests</p>
         </div>
 
         {loading ? (
@@ -151,7 +153,6 @@ export default function AdminRequestsPage() {
               <KeyRound className="h-8 w-8 text-muted-foreground/50" />
             </div>
             <h3 className="text-lg font-medium">No pending requests</h3>
-            <p className="text-sm text-muted-foreground mt-1">All password reset requests have been handled</p>
           </div>
         )}
       </div>
@@ -163,7 +164,7 @@ export default function AdminRequestsPage() {
               <DialogHeader>
                 <DialogTitle>Password Reset Successful</DialogTitle>
                 <DialogDescription>
-                  New password for {selected?.organizer.name}. Share this with the organizer.
+                  New password for {selected?.organizer.name}. Send this to the organizer.
                 </DialogDescription>
               </DialogHeader>
               <div className="flex items-center gap-2 rounded-lg border bg-muted/50 p-3 font-mono text-sm">

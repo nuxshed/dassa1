@@ -31,9 +31,11 @@ export const organizerschema = z.object({
   _id: z.string(),
   name: z.string(),
   category: z.string(),
-  description: z.string(),
-  email: z.email(),
+  description: z.string().optional(),
+  email: z.string(),
+  contact: z.string().optional(),
   followers: z.number().optional(),
+  disabled: z.boolean().optional(),
 })
 
 export type organizer = z.infer<typeof organizerschema>
@@ -51,8 +53,7 @@ export const eventschema = z.object({
     start: z.string(),
     end: z.string(),
   }),
-  registrationLimit: z.number().optional(),
-  registrationCount: z.number().optional(),
+  limit: z.number().optional(),
   regcount: z.number().optional(),
   fee: z.number().optional(),
   tags: z.array(z.string()).optional(),

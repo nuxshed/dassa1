@@ -99,7 +99,7 @@ function EventCard({ event: ev }: { event: event }) {
             >
               {ev.type}
             </Badge>
-            {ev.registrationLimit && ev.registrationCount && ev.registrationCount >= ev.registrationLimit && (
+            {ev.limit && ev.regcount && ev.regcount >= ev.limit && (
                <Badge variant="destructive" className="font-normal text-[10px]">Full</Badge>
             )}
           </div>

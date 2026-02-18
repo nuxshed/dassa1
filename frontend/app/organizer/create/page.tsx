@@ -99,12 +99,9 @@ export default function CreateEvent() {
       payload.fee = data.fee ?? 0
     }
 
-    console.log('Submitting payload:', payload)
     try {
       await mutate(payload)
-    } catch (err) {
-      console.error('Mutation error:', err)
-    }
+    } catch (err) {}
   }
 
   const eventtype = watch('type')

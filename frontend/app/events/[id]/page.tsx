@@ -167,7 +167,7 @@ function RegistrationCard({ event, registration, isRegistered }: { event: event,
     }
   }
 
-  const isFull = (event.registrationCount || 0) >= (event.registrationLimit || Infinity)
+  const isFull = (event.regcount || 0) >= (event.limit || Infinity)
   const isPastDeadline = new Date() > new Date(event.dates.deadline)
   const canRegister = !isRegistered && !isFull && !isPastDeadline && event.status === 'published'
 
@@ -195,12 +195,12 @@ function RegistrationCard({ event, registration, isRegistered }: { event: event,
              <div className="space-y-2">
                <div className="flex justify-between text-xs">
                  <span className="text-muted-foreground">Capacity</span>
-                 <span className="font-medium">{event.registrationCount || 0} / {event.registrationLimit || '∞'}</span>
+                 <span className="font-medium">{event.regcount || 0} / {event.limit || '∞'}</span>
                </div>
                <div className="h-1 bg-muted rounded-full overflow-hidden">
                  <div 
                    className="h-full bg-foreground transition-all" 
-                   style={{ width: `${Math.min(100, ((event.registrationCount || 0) / (event.registrationLimit || 1)) * 100)}%` }}
+                   style={{ width: `${Math.min(100, ((event.regcount || 0) / (event.limit || 1)) * 100)}%` }}
                  />
                </div>
              </div>

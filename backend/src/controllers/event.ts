@@ -48,6 +48,7 @@ export const browseevents = async (req: Request, res: Response) => {
     if (!req.user || req.user.role !== 'Organizer') {
       query.status = 'published';
     } else {
+      query.organizer = req.user._id;
       if (status) {
         query.status = status;
       }

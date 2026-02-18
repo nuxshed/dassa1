@@ -5,6 +5,8 @@ import { CreateOrganizerSchema } from '../schemas/user';
 import { resetrequest } from '../models/resetrequest';
 import { resolveresetschema } from '../schemas/resetreq';
 import { genpass } from '../util/genpass';
+import { event } from '../models/event';
+import { registration } from '../models/registration';
 
 export const createorganizer = async (req: Request, res: Response) => {
   try {
@@ -13,7 +15,8 @@ export const createorganizer = async (req: Request, res: Response) => {
       return res.status(400).json({ error: result.error.issues });
     }
 
-    const { password, ...rest } = result.data;
+    const { password: providedPassword, ...rest } = result.data;
+    const password = providedPassword || genpass();
 
     const exists = await Organizer.findOne({ email: rest.email });
     if(exists) {
@@ -54,8 +57,33 @@ export const deleteorganizer = async (req: Request, res: Response) => {
     if (!org) {
       return res.status(404).json({ message: 'organizer not found' });
     }
+
+    const events = await event.find({ organizer: org._id }).select('_id');
+    const eventids = events.map(e => e._id);
+
+    if (eventids.length > 0) {
+      await registration.deleteMany({ event: { $in: eventids } });
+      await event.deleteMany({ organizer: org._id });
+    }
+
+    await resetrequest.deleteMany({ organizer: org._id });
     await Organizer.findByIdAndDelete(req.params.orgid);
+
     res.json({ message: 'organizer removed' });
+  } catch (err) {
+    res.status(500).json({ message: 'server error' });
+  }
+};
+
+export const toggleorganizer = async (req: Request, res: Response) => {
+  try {
+    const org = await Organizer.findById(req.params.orgid);
+    if (!org) {
+      return res.status(404).json({ message: 'organizer not found' });
+    }
+    org.disabled = !org.disabled;
+    await org.save();
+    res.json({ _id: org._id, disabled: org.disabled });
   } catch (err) {
     res.status(500).json({ message: 'server error' });
   }

@@ -53,7 +53,7 @@ export default function OrganizerEventPage() {
   const startEditing = () => {
     if (!ev) return
     setDescription(ev.description)
-    setLimit(String(ev.registrationLimit || ev.regcount || ''))
+    setLimit(String(ev.limit || ''))
     setFee(String(ev.fee ?? ''))
     setStatus(ev.status)
     const dl = new Date(ev.dates.deadline)
@@ -76,7 +76,7 @@ export default function OrganizerEventPage() {
 
       const body: any = {}
       if (description !== ev.description) body.description = description
-      if (Number(limit) !== (ev.registrationLimit || 0)) body.limit = Number(limit)
+      if (Number(limit) !== (ev.limit || 0)) body.limit = Number(limit)
       if (fee !== '' && Number(fee) !== (ev.fee ?? 0)) body.fee = Number(fee)
       if (status !== ev.status) body.status = status
       if (deadline && deadline.getTime() !== new Date(ev.dates.deadline).getTime()) {
@@ -463,7 +463,7 @@ function EditForm({
 }
 
 function StatsCard({ event: ev, total }: { event: event; total: number }) {
-  const limit = ev.registrationLimit || 0
+  const limit = ev.limit || 0
   const pct = limit ? Math.min(100, (total / limit) * 100) : 0
 
   return (

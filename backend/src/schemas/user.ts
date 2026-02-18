@@ -31,9 +31,9 @@ export const CreateParticipantSchema = z.discriminatedUnion("type", [
 
 export const CreateOrganizerSchema = z.object({
   name: z.string().min(1),
-  email: z.email({ pattern: iiitemail }),
+  email: z.string().email(),
   contact: z.string().min(10),
-  password: z.string().min(8),
+  password: z.string().min(8).optional(),
   category: z.string().min(1),
   description: z.string().optional(),
 });

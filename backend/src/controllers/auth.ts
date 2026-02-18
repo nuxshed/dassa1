@@ -51,6 +51,9 @@ export const login = async (req: Request, res: Response) => {
     const user = await User.findOne({ email });
 
     if(user && (await bcrypt.compare(password, user.password))) {
+      if ((user as any).disabled) {
+        return res.status(403).json({ message: 'account disabled' });
+      }
       res.json({
         _id: user.id,
         email: user.email,
