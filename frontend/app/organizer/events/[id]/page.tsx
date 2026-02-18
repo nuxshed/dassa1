@@ -47,6 +47,8 @@ export default function OrganizerEventPage() {
   const [deadlineDate, setDeadlineDate] = useState<Date>()
   const [deadlineTime, setDeadlineTime] = useState('09:00')
   const [fee, setFee] = useState('')
+  const [variants, setVariants] = useState<any[]>([])
+  const [purchaseLimit, setPurchaseLimit] = useState('')
   const [deadlineOpen, setDeadlineOpen] = useState(false)
   const [saving, setSaving] = useState(false)
 
@@ -56,6 +58,8 @@ export default function OrganizerEventPage() {
     setLimit(String(ev.limit || ''))
     setFee(String(ev.fee ?? ''))
     setStatus(ev.status)
+    setVariants(ev.variants ? [...ev.variants] : [])
+    setPurchaseLimit(String(ev.purchaseLimit ?? ''))
     const dl = new Date(ev.dates.deadline)
     setDeadlineDate(dl)
     setDeadlineTime(format(dl, 'HH:mm'))
@@ -81,6 +85,19 @@ export default function OrganizerEventPage() {
       if (status !== ev.status) body.status = status
       if (deadline && deadline.getTime() !== new Date(ev.dates.deadline).getTime()) {
         body.dates = { deadline }
+      }
+      if (ev.type === 'Merchandise') {
+        const pLimit = purchaseLimit === '' ? 1 : parseInt(purchaseLimit);
+        if (pLimit !== ev.purchaseLimit) body.purchaseLimit = pLimit;
+        
+        // Simple equality check for variants is hard, so we always send them
+        // Or implement a deep check. For now, sending them if there's any change
+        // compared to original would be robust. But since we need to send ALL variants on update
+        // as per many PUT/PATCH implementations for arrays, let's include it if anything changed.
+        // Or just include it if the user edited anything in the form?
+        // Let's assume the API handles partial updates gracefully or replaces the list.
+        // Assuming replace for array fields usually.
+        body.variants = variants;
       }
 
       if (Object.keys(body).length === 0) {
@@ -254,6 +271,10 @@ export default function OrganizerEventPage() {
                 setDeadlineOpen={setDeadlineOpen}
                 currentStatus={ev.status}
                 eventType={ev.type}
+                variants={variants}
+                setVariants={setVariants}
+                purchaseLimit={purchaseLimit}
+                setPurchaseLimit={setPurchaseLimit}
               />
             ) : (
               <EventDetails event={ev} />
@@ -342,6 +363,27 @@ function EventDetails({ event: ev }: { event: event }) {
           <h2 className="text-sm font-medium mb-3">About</h2>
           <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap">{ev.description}</p>
         </div>
+        
+        {ev.type === 'Merchandise' && ev.variants && (
+          <div>
+            <h2 className="text-sm font-medium mb-3">Variants</h2>
+            <div className="border rounded-md divide-y">
+              {ev.variants.map((v, i) => (
+                <div key={i} className="flex justify-between p-3 text-sm">
+                  <span className="font-medium">{v.name}</span>
+                  <div className="flex gap-4 text-muted-foreground">
+                    <span>{v.stock} left</span>
+                    <span>₹{v.price}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+            {ev.purchaseLimit && (
+               <p className="text-xs text-muted-foreground mt-2">Max {ev.purchaseLimit} per person</p>
+            )}
+          </div>
+        )}
+
         {ev.tags && ev.tags.length > 0 && (
           <div className="flex flex-wrap gap-1.5 pt-2">
             {ev.tags.map(tag => (
@@ -364,6 +406,8 @@ function EditForm({
   deadlineOpen, setDeadlineOpen,
   currentStatus,
   eventType,
+  variants, setVariants,
+  purchaseLimit, setPurchaseLimit,
 }: {
   description: string; setDescription: (v: string) => void
   limit: string; setLimit: (v: string) => void
@@ -374,8 +418,24 @@ function EditForm({
   deadlineOpen: boolean; setDeadlineOpen: (v: boolean) => void
   currentStatus: string
   eventType: string
+  variants: any[]; setVariants: (v: any[]) => void
+  purchaseLimit: string; setPurchaseLimit: (v: string) => void
 }) {
   const statusOptions = ['draft', 'published', 'ongoing', 'completed', 'cancelled']
+
+  const updateVariant = (index: number, key: string, val: string | number) => {
+    const newVariants = [...variants]
+    newVariants[index] = { ...newVariants[index], [key]: val }
+    setVariants(newVariants)
+  }
+
+  const addVariant = () => {
+    setVariants([...variants, { name: '', stock: 0, price: 0 }])
+  }
+
+  const removeVariant = (index: number) => {
+    setVariants(variants.filter((_, i) => i !== index))
+  }
 
   return (
     <div className="space-y-6">
@@ -390,7 +450,7 @@ function EditForm({
           />
         </Field>
 
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
           <Field>
             <FieldLabel>Registration Limit</FieldLabel>
             <Input
@@ -413,6 +473,18 @@ function EditForm({
             </Field>
           )}
 
+          {eventType === 'Merchandise' && (
+             <Field>
+              <FieldLabel>Purchase Limit</FieldLabel>
+              <Input
+                type="number"
+                min="1"
+                value={purchaseLimit}
+                onChange={e => setPurchaseLimit(e.target.value)}
+              />
+            </Field>
+          )}
+
           <Field>
             <FieldLabel>Status</FieldLabel>
             <Select value={status} onValueChange={setStatus}>
@@ -427,6 +499,48 @@ function EditForm({
             </Select>
           </Field>
         </div>
+
+        {eventType === 'Merchandise' && (
+          <div className="space-y-4">
+             <div className="flex items-center justify-between">
+                <h3 className="text-sm font-medium">Variants</h3>
+                <Button size="sm" variant="outline" onClick={addVariant}>Add Variant</Button>
+             </div>
+             {variants.map((v, i) => (
+                <div key={i} className="flex gap-2 items-end">
+                  <Field className="flex-1">
+                    <FieldLabel className="text-xs">Name</FieldLabel>
+                    <Input 
+                      value={v.name} 
+                      onChange={e => updateVariant(i, 'name', e.target.value)} 
+                      placeholder="e.g. Small"
+                    />
+                  </Field>
+                  <Field className="w-20">
+                    <FieldLabel className="text-xs">Stock</FieldLabel>
+                    <Input 
+                      type="number" 
+                      min="0"
+                      value={v.stock} 
+                      onChange={e => updateVariant(i, 'stock', parseInt(e.target.value) || 0)} 
+                    />
+                  </Field>
+                  <Field className="w-24">
+                    <FieldLabel className="text-xs">Price (₹)</FieldLabel>
+                    <Input 
+                      type="number" 
+                      min="0"
+                      value={v.price} 
+                      onChange={e => updateVariant(i, 'price', parseFloat(e.target.value) || 0)} 
+                    />
+                  </Field>
+                   <Button variant="ghost" size="icon" onClick={() => removeVariant(i)} className="mb-0.5 text-destructive hover:text-destructive">
+                      <Trash2 className="h-4 w-4" />
+                   </Button>
+                </div>
+             ))}
+          </div>
+        )}
 
         <div className="flex gap-4">
           <Field className="w-56">

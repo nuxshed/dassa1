@@ -1,7 +1,7 @@
 'use client'
 
 import { AppLayout } from '@/components/layouts/applayout'
-import { useForm } from 'react-hook-form'
+import { useForm, useFieldArray } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
@@ -14,7 +14,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Separator } from '@/components/ui/separator'
 import { usemutation } from '@/lib/hooks/usemutation'
 import { eventcreateschema, type eventcreateform } from '@/lib/schemas/event'
-import { Loader2, CalendarIcon, ArrowLeft } from 'lucide-react'
+import { Loader2, CalendarIcon, ArrowLeft, Plus, Trash2 } from 'lucide-react'
 import { format } from 'date-fns'
 import Link from 'next/link'
 
@@ -36,6 +36,7 @@ export default function CreateEvent() {
     handleSubmit,
     setValue,
     watch,
+    control,
     formState: { errors, isSubmitting },
   } = useForm<eventcreateform>({
     resolver: zodResolver(eventcreateschema),
@@ -44,6 +45,11 @@ export default function CreateEvent() {
       eligibility: 'all',
     },
   })
+
+  const { fields, append, remove } = useFieldArray({
+    control,
+    name: "variants",
+  });
 
   const { mutate } = usemutation('/api/events', {
     method: 'POST',
@@ -72,6 +78,7 @@ export default function CreateEvent() {
     const start = new Date(startDate)
     if (startTime) {
       const [hours, minutes] = startTime.split(':')
+
       start.setHours(parseInt(hours), parseInt(minutes))
     }
 
@@ -97,6 +104,13 @@ export default function CreateEvent() {
 
     if (data.type === 'Normal') {
       payload.fee = data.fee ?? 0
+    } else if (data.type === 'Merchandise') {
+      payload.variants = data.variants?.map(v => ({
+        name: v.name,
+        stock: v.stock,
+        price: v.price || 0
+      })) || [];
+      payload.purchaseLimit = data.purchaseLimit || 1;
     }
 
     try {
@@ -356,7 +370,89 @@ export default function CreateEvent() {
                       )}
                     </Field>
                   )}
+
+                  {eventtype === 'Merchandise' && (
+                     <Field>
+                      <FieldLabel htmlFor="purchaseLimit">Purchase Limit / Person</FieldLabel>
+                      <Input
+                        id="purchaseLimit"
+                        type="number"
+                        min="1"
+                        {...register('purchaseLimit', { 
+                          setValueAs: (v) => v === '' ? undefined : parseInt(v) 
+                        })}
+                      />
+                      {errors.purchaseLimit && (
+                        <p className="text-sm text-destructive">{errors.purchaseLimit.message}</p>
+                      )}
+                    </Field>
+                  )}
                 </div>
+
+                {eventtype === 'Merchandise' && (
+                  <div className="space-y-4">
+                     <div className="flex items-center justify-between">
+                        <h3 className="text-md font-medium">Variants</h3>, price: 0
+                        <Button type="button" variant="outline" size="sm" onClick={() => append({ name: '', stock: 0 })}>
+                          <Plus className="h-4 w-4 mr-2" />
+                          Add Variant
+                        </Button>
+                     </div>
+                     
+                     <div className="space-y-3">
+                        {fields.map((field, index) => (
+                           <div key={field.id} className="flex items-end gap-3">
+                              <Field className="flex-1">
+                                <FieldLabel>Name</FieldLabel>
+                                <Input 
+                                  placeholder="Size/Color (e.g. Small Red)"
+                                  {...register(`variants.${index}.name`)} 
+                                />
+                                {errors.variants?.[index]?.name && (
+                                   <p className="text-xs text-destructive mt-1">{errors.variants[index]?.name?.message}</p>
+                                )}
+                              </Field>
+                              <Field className="w-24">
+                                <FieldLabel>Price (₹)</FieldLabel>
+                                <Input 
+                                  type="number"
+                                  min="0"
+                                  placeholder="0"
+                                  {...register(`variants.${index}.price`, { valueAsNumber: true })} 
+                                />
+                                {errors.variants?.[index]?.price && (
+                                   <p className="text-xs text-destructive mt-1">{errors.variants[index]?.price?.message}</p>
+                                )}
+                              </Field>
+                              <Field className="w-24">
+                                <FieldLabel>Stock</FieldLabel>
+                                <Input 
+                                  type="number"
+                                  min="0"
+                                  {...register(`variants.${index}.stock`, { valueAsNumber: true })} 
+                                />
+                                {errors.variants?.[index]?.stock && (
+                                   <p className="text-xs text-destructive mt-1">{errors.variants[index]?.stock?.message}</p>
+                                )}
+                              </Field>
+                              <Button 
+                                type="button" 
+                                variant="destructive" 
+                                size="icon"
+                                className="mb-0.5"
+                                onClick={() => remove(index)}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                           </div>
+                        ))}
+                     </div>
+                     {errors.variants && !Array.isArray(errors.variants) && (
+                        <p className="text-sm text-destructive">{(errors.variants as any).message}</p>
+                     )}
+                  </div>
+                )}
+
 
                 <Field>
                   <FieldLabel htmlFor="tags">Tags</FieldLabel>

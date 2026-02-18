@@ -58,12 +58,12 @@ export const eventschema = z.object({
   fee: z.number().optional(),
   tags: z.array(z.string()).optional(),
 
-  item: z.object({
-    sizes: z.array(z.string()),
-    colors: z.array(z.string()),
+  variants: z.array(z.object({
+    name: z.string(),
     stock: z.number(),
-    limit: z.number(),
-  }).optional(),
+    price: z.number(),
+  })).optional(),
+  purchaseLimit: z.number().optional(),
 })
 
 export type event = z.infer<typeof eventschema>

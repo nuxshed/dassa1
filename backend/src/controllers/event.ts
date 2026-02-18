@@ -110,22 +110,40 @@ export const getevent = async (req: Request, res: Response) => {
 export const updatevent = async (req: Request, res: Response) => {
   try {
     const result = updateventschema.safeParse(req.body);
+
     if (!result.success) {
       return res.status(400).json({ error: result.error.issues });
     }
 
     const ev = req.event;
 
-    if (result.data.dates) {
-      ev.dates = { ...ev.dates, ...result.data.dates };
-      delete (result.data as any).dates;
+    if (!ev) {
+        return res.status(404).json({ message: 'Event not found' });
     }
 
-    Object.assign(ev, result.data);
-    await ev.save();
+    if (result.data.dates) {
+        ev.dates = { ...ev.dates, ...result.data.dates };
+        delete (result.data as any).dates;
+    }
 
+    // Explicitly update fields to be safe with Mongoose and Discriminators
+    if (result.data.description !== undefined) ev.description = result.data.description;
+    if (result.data.limit !== undefined) ev.limit = result.data.limit;
+    if (result.data.status !== undefined) ev.status = result.data.status as any;
+    
+    // Handle Discriminator specific fields
+    if (ev.type === 'Normal') {
+        if (result.data.fee !== undefined) (ev as any).fee = result.data.fee;
+    } else if (ev.type === 'Merchandise') {
+        if (result.data.variants !== undefined) (ev as any).variants = result.data.variants;
+        if (result.data.purchaseLimit !== undefined) (ev as any).purchaseLimit = result.data.purchaseLimit;
+    }
+    
+    await ev.save();
     res.json(ev);
+
   } catch (err) {
+    console.error(err);
     res.status(500).json({ message: 'server error' });
   }
 };

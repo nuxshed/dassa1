@@ -52,9 +52,9 @@ export const normalevent = event.discriminator('Normal', new Schema({
 
 export const merchevent = event.discriminator('Merchandise', new Schema({
   variants: [{ 
-    size: String, 
-    color: String,
-    stock: { type: Number, required: true, min: 0 }
+    name: { type: String, required: true },
+    stock: { type: Number, required: true, min: 0 },
+    price: { type: Number, default: 0, min: 0 }
   }],
-  purchaselimit: { type: Number, default: 1 },
+  purchaseLimit: { type: Number, default: 1 },
 }));

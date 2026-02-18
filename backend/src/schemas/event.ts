@@ -26,11 +26,11 @@ export const createnormaleventschema = basevent.extend({
 export const createmercheventschema = basevent.extend({
   type: z.literal("Merchandise"),
   variants: z.array(z.object({
-    size: z.string(),
-    color: z.string(),
+    name: z.string(),
     stock: z.number().int().min(0),
+    price: z.number().min(0).default(0),
   })),
-  purchaselimit: z.number().int().min(1).default(1),
+  purchaseLimit: z.number().int().min(1).default(1),
 });
 
 export const createventschema = z.discriminatedUnion("type", [
@@ -47,10 +47,11 @@ export const updateventschema = z.object({
   fee: z.number().min(0).optional(),
   status: z.enum(['published', 'ongoing', 'completed', 'cancelled']).optional(),
   variants: z.array(z.object({
-    size: z.string(),
-    color: z.string(),
+    name: z.string(),
+    price: z.number().min(0).default(0),
     stock: z.number().int().min(0),
-  })).optional()
+  })).optional(),
+  purchaseLimit: z.number().int().min(1).optional(),
 }).strict();
 
 export const formschema = z.object({
