@@ -392,7 +392,7 @@ export default function CreateEvent() {
                 {eventtype === 'Merchandise' && (
                   <div className="space-y-4">
                      <div className="flex items-center justify-between">
-                        <h3 className="text-md font-medium">Variants</h3>, price: 0
+                        <h3 className="text-md font-medium">Variants</h3>
                         <Button type="button" variant="outline" size="sm" onClick={() => append({ name: '', stock: 0 })}>
                           <Plus className="h-4 w-4 mr-2" />
                           Add Variant

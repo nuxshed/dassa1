@@ -39,6 +39,10 @@ export const browseevents = async (req: Request, res: Response) => {
       search, 
       tags, 
       organizer,
+      eligibility,
+      dateFrom,
+      dateTo,
+      following,
       limit = 20,
       skip = 0
     } = req.query;
@@ -55,27 +59,69 @@ export const browseevents = async (req: Request, res: Response) => {
     }
 
     if (type) query.type = type;
+    if (eligibility) query.eligibility = eligibility;
     if (organizer) query.organizer = organizer;
     if (tags) {
       const taglist = (tags as string).split(',');
       query.tags = { $in: taglist };
     }
-    if (search) {
-      query.$text = { $search: search as string };
+
+    // date range filter
+    if (dateFrom || dateTo) {
+      query['dates.start'] = {};
+      if (dateFrom) query['dates.start'].$gte = new Date(dateFrom as string);
+      if (dateTo) query['dates.start'].$lte = new Date(dateTo as string);
     }
 
-    const events = await event
+    // followed clubs filter
+    if (following) {
+      const ids = (following as string).split(',');
+      query.organizer = { $in: ids };
+    }
+
+    // search: regex partial match on event name
+    // we also search organizer name after population
+    let nameRegex: RegExp | null = null;
+    if (search) {
+      const escaped = (search as string).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      nameRegex = new RegExp(escaped, 'i');
+      query.name = { $regex: nameRegex };
+    }
+
+    let events = await event
       .find(query)
       .populate('organizer', 'name category')
       .sort({ 'dates.start': 1 })
-      .limit(Number(limit))
-      .skip(Number(skip))
       .select('-formschema');
 
-    const total = await event.countDocuments(query);
+    // also match organizer name if search is provided
+    if (search && nameRegex) {
+      const allByOrg = await event
+        .find({ ...query, name: undefined })
+        .populate('organizer', 'name category')
+        .sort({ 'dates.start': 1 })
+        .select('-formschema');
+
+      const orgMatches = allByOrg.filter(e => {
+        const org = e.organizer as any;
+        return org?.name && nameRegex!.test(org.name);
+      });
+
+      // merge without duplicates
+      const ids = new Set(events.map(e => e._id.toString()));
+      for (const e of orgMatches) {
+        if (!ids.has(e._id.toString())) {
+          events.push(e);
+          ids.add(e._id.toString());
+        }
+      }
+    }
+
+    const total = events.length;
+    const paginated = events.slice(Number(skip), Number(skip) + Number(limit));
 
     res.json({
-      events,
+      events: paginated,
       total,
       limit: Number(limit),
       skip: Number(skip)
@@ -196,7 +242,7 @@ export const updateform = async (req: Request, res: Response) => {
 
     const regcount = await registration.countDocuments({ 
       event: ev._id, 
-      status: 'registered' 
+      status: { $in: ['Registered', 'Pending', 'Purchased'] }
     });
 
     if (regcount > 0) {
@@ -209,6 +255,52 @@ export const updateform = async (req: Request, res: Response) => {
     await ev.save();
 
     res.json(ev.formschema);
+  } catch (err) {
+    res.status(500).json({ message: 'server error' });
+  }
+};
+
+export const trendingevents = async (_req: Request, res: Response) => {
+  try {
+    const since = new Date(Date.now() - 24 * 60 * 60 * 1000);
+
+    const trending = await registration.aggregate([
+      { $match: { createdAt: { $gte: since } } },
+      { $group: { _id: '$event', count: { $sum: 1 } } },
+      { $sort: { count: -1 } },
+      { $limit: 20 }
+    ]);
+
+    const eventIds = trending.map(t => t._id);
+    const events = await event
+      .find({ _id: { $in: eventIds }, status: 'published' })
+      .populate('organizer', 'name category')
+      .select('-formschema');
+
+    // preserve trending order
+    const ordered = eventIds
+      .map(id => events.find(e => e._id.toString() === id.toString()))
+      .filter((e): e is any => !!e)
+      .slice(0, 5);
+
+    if (ordered.length < 5) {
+      const needed = 5 - ordered.length;
+      const existingIds = ordered.map(e => e._id);
+
+      const backfill = await event
+        .find({
+          status: 'published',
+          _id: { $nin: existingIds }
+        })
+        .sort({ regcount: -1 })
+        .limit(needed)
+        .populate('organizer', 'name category')
+        .select('-formschema');
+
+      ordered.push(...backfill);
+    }
+
+    res.json({ events: ordered });
   } catch (err) {
     res.status(500).json({ message: 'server error' });
   }

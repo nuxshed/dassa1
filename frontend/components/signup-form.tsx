@@ -60,7 +60,12 @@ export function SignupForm({
         method: 'POST',
         body: { ...data, type },
       });
-      login(result.token, result);
+      
+      if (type === 'External' || type === 'IIIT') {
+        login(result.token, result, '/onboarding');
+      } else {
+        login(result.token, result);
+      }
     } catch (err: any) {
       seterror(err.message);
     }

@@ -14,21 +14,24 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Calendar } from '@/components/ui/calendar'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { Field, FieldGroup, FieldLabel } from '@/components/ui/field'
-import { AlertCircle, ArrowLeft, CalendarIcon, Loader2, Users, Pencil, X, Check, Download, Trash2 } from 'lucide-react'
+import { AlertCircle, ArrowLeft, CalendarIcon, Loader2, Users, Pencil, X, Check, Download, Trash2, ImageIcon, ExternalLink, ScanLine, Search } from 'lucide-react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import type { event } from '@/lib/types'
 import { toast } from 'sonner'
 import { useState } from 'react'
 import { format } from 'date-fns'
+import { FormBuilder } from '@/components/form-builder'
 
 type participant = {
   ticketid: string
   user: { _id: string; email: string; firstName?: string; lastName?: string }
-  formdata?: Record<string, any>
+  formdata?: any[]
   checkin?: boolean
   registeredat: string
   status: string
+  payment?: { proof: string; uploadedat: string }
 }
 
 export default function OrganizerEventPage() {
@@ -47,8 +50,6 @@ export default function OrganizerEventPage() {
   const [deadlineDate, setDeadlineDate] = useState<Date>()
   const [deadlineTime, setDeadlineTime] = useState('09:00')
   const [fee, setFee] = useState('')
-  const [variants, setVariants] = useState<any[]>([])
-  const [purchaseLimit, setPurchaseLimit] = useState('')
   const [deadlineOpen, setDeadlineOpen] = useState(false)
   const [saving, setSaving] = useState(false)
 
@@ -58,8 +59,6 @@ export default function OrganizerEventPage() {
     setLimit(String(ev.limit || ''))
     setFee(String(ev.fee ?? ''))
     setStatus(ev.status)
-    setVariants(ev.variants ? [...ev.variants] : [])
-    setPurchaseLimit(String(ev.purchaseLimit ?? ''))
     const dl = new Date(ev.dates.deadline)
     setDeadlineDate(dl)
     setDeadlineTime(format(dl, 'HH:mm'))
@@ -85,19 +84,6 @@ export default function OrganizerEventPage() {
       if (status !== ev.status) body.status = status
       if (deadline && deadline.getTime() !== new Date(ev.dates.deadline).getTime()) {
         body.dates = { deadline }
-      }
-      if (ev.type === 'Merchandise') {
-        const pLimit = purchaseLimit === '' ? 1 : parseInt(purchaseLimit);
-        if (pLimit !== ev.purchaseLimit) body.purchaseLimit = pLimit;
-        
-        // Simple equality check for variants is hard, so we always send them
-        // Or implement a deep check. For now, sending them if there's any change
-        // compared to original would be robust. But since we need to send ALL variants on update
-        // as per many PUT/PATCH implementations for arrays, let's include it if anything changed.
-        // Or just include it if the user edited anything in the form?
-        // Let's assume the API handles partial updates gracefully or replaces the list.
-        // Assuming replace for array fields usually.
-        body.variants = variants;
       }
 
       if (Object.keys(body).length === 0) {
@@ -234,6 +220,12 @@ export default function OrganizerEventPage() {
               </>
             ) : (
               <>
+                <Link href={`/organizer/events/${id}/attendance`}>
+                  <Button variant="outline" size="sm">
+                    <ScanLine className="h-3.5 w-3.5 mr-1.5" />
+                    Attendance
+                  </Button>
+                </Link>
                 <Button variant="ghost" size="sm" onClick={startEditing}>
                   <Pencil className="h-3.5 w-3.5 mr-1.5" /> Edit
                 </Button>
@@ -253,78 +245,57 @@ export default function OrganizerEventPage() {
 
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-8">
           <div className="space-y-6">
-            {editing ? (
-              <EditForm
-                description={description}
-                setDescription={setDescription}
-                limit={limit}
-                setLimit={setLimit}
-                fee={fee}
-                setFee={setFee}
-                status={status}
-                setStatus={setStatus}
-                deadlineDate={deadlineDate}
-                setDeadlineDate={setDeadlineDate}
-                deadlineTime={deadlineTime}
-                setDeadlineTime={setDeadlineTime}
-                deadlineOpen={deadlineOpen}
-                setDeadlineOpen={setDeadlineOpen}
-                currentStatus={ev.status}
-                eventType={ev.type}
-                variants={variants}
-                setVariants={setVariants}
-                purchaseLimit={purchaseLimit}
-                setPurchaseLimit={setPurchaseLimit}
-              />
-            ) : (
-              <EventDetails event={ev} />
-            )}
-
-            <Separator />
-
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <h2 className="text-sm font-medium">Registrations ({regData?.total || 0})</h2>
-                {participants.length > 0 && (
-                  <Button variant="ghost" size="sm" onClick={handleExport}>
-                    <Download className="h-3.5 w-3.5 mr-1.5" /> Export
-                  </Button>
-                )}
-              </div>
-
-              {regLoading ? (
-                <div className="space-y-2">
-                  {[1, 2, 3].map(i => <Skeleton key={i} className="h-12" />)}
-                </div>
-              ) : participants.length > 0 ? (
-                <div className="border rounded-md divide-y">
-                  {participants.map(p => (
-                    <div key={p.ticketid} className="flex items-center justify-between px-4 py-3">
-                      <div className="flex items-center gap-3 min-w-0">
-                        <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center shrink-0">
-                          <Users className="h-3.5 w-3.5 text-muted-foreground" />
-                        </div>
-                        <div className="min-w-0">
-                          <p className="text-sm font-medium truncate">
-                            {p.user.firstName ? `${p.user.firstName} ${p.user.lastName || ''}`.trim() : p.user.email}
-                          </p>
-                          <p className="text-xs text-muted-foreground font-mono">{p.ticketid}</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2 shrink-0">
-                        {p.checkin && <Badge variant="outline" className="text-xs">Checked in</Badge>}
-                        <Badge variant="secondary" className="text-xs capitalize">{p.status}</Badge>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="flex flex-col items-center justify-center py-12 border rounded-md border-dashed">
-                  <Users className="h-8 w-8 text-muted-foreground/40 mb-2" />
-                  <p className="text-sm text-muted-foreground">No registrations yet</p>
-                </div>
+            <Tabs defaultValue="details">
+              {ev.type === 'Normal' && (
+                <TabsList className="bg-muted/50 p-1 h-10 mb-6">
+                  <TabsTrigger value="details" className="rounded-sm px-4 text-sm">Details</TabsTrigger>
+                  <TabsTrigger value="form" className="rounded-sm px-4 text-sm">Registration Form</TabsTrigger>
+                </TabsList>
               )}
-            </div>
+
+              <TabsContent value="details" className="space-y-6">
+                {editing ? (
+                  <EditForm
+                    description={description}
+                    setDescription={setDescription}
+                    limit={limit}
+                    setLimit={setLimit}
+                    fee={fee}
+                    setFee={setFee}
+                    status={status}
+                    setStatus={setStatus}
+                    deadlineDate={deadlineDate}
+                    setDeadlineDate={setDeadlineDate}
+                    deadlineTime={deadlineTime}
+                    setDeadlineTime={setDeadlineTime}
+                    deadlineOpen={deadlineOpen}
+                    setDeadlineOpen={setDeadlineOpen}
+                    currentStatus={ev.status}
+                    eventType={ev.type}
+                  />
+                ) : (
+                  <EventDetails event={ev} />
+                )}
+
+                <Separator />
+
+                <RegistrationsSection
+                  ev={ev}
+                  participants={participants}
+                  regLoading={regLoading}
+                  regTotal={regData?.total || 0}
+                  onExport={handleExport}
+                  onRefetch={refetchRegs}
+                  token={token}
+                />
+              </TabsContent>
+
+              {ev.type === 'Normal' && (
+                <TabsContent value="form">
+                  <FormBuilder eventId={ev._id} regcount={regData?.total || 0} />
+                </TabsContent>
+              )}
+            </Tabs>
           </div>
 
           <div className="space-y-4">
@@ -335,6 +306,306 @@ export default function OrganizerEventPage() {
         </div>
       </div>
     </AppLayout>
+  )
+}
+
+function ProofLink({ url, token }: { url: string; token: string | null }) {
+  const [loading, setLoading] = useState(false)
+
+  const handleView = async () => {
+    setLoading(true)
+    try {
+      const res = await fetch(url, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      if (!res.ok) throw new Error('Failed to load')
+      const blob = await res.blob()
+      const objectUrl = URL.createObjectURL(blob)
+      window.open(objectUrl, '_blank')
+    } catch {
+      toast.error('Failed to load proof')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <button
+      onClick={handleView}
+      disabled={loading}
+      className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground underline underline-offset-4"
+    >
+      <ImageIcon className="h-3 w-3" />
+      {loading ? 'Loading...' : 'View payment proof'}
+      <ExternalLink className="h-3 w-3" />
+    </button>
+  )
+}
+
+function FileLink({ url, token }: { url: string; token: string | null }) {
+  const [loading, setLoading] = useState(false)
+
+  const handleView = async () => {
+    setLoading(true)
+    try {
+      const res = await fetch(url, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      if (!res.ok) throw new Error('Failed to load')
+      const blob = await res.blob()
+      const objectUrl = URL.createObjectURL(blob)
+      window.open(objectUrl, '_blank')
+    } catch {
+      toast.error('Failed to load file')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <button
+      onClick={handleView}
+      disabled={loading}
+      className="inline-flex items-center gap-1 text-xs text-foreground hover:text-foreground underline underline-offset-4"
+    >
+      {loading ? 'Loading...' : 'View File'}
+      <ExternalLink className="h-3 w-3" />
+    </button>
+  )
+}
+
+function RegistrationsSection({
+  ev,
+  participants,
+  regLoading,
+  regTotal,
+  onExport,
+  onRefetch,
+  token,
+}: {
+  ev: event
+  participants: participant[]
+  regLoading: boolean
+  regTotal: number
+  onExport: () => void
+  onRefetch: () => void
+  token: string | null
+}) {
+  const isMerch = ev.type === 'Merchandise'
+  const pending = participants.filter(p => p.status === 'Pending')
+  const [actionLoading, setActionLoading] = useState<string | null>(null)
+  const [expanded, setExpanded] = useState<string | null>(null)
+  const [search, setSearch] = useState('')
+
+  const filtered = search.trim()
+    ? participants.filter(p => {
+        const q = search.toLowerCase()
+        const name = `${p.user.firstName || ''} ${p.user.lastName || ''}`.toLowerCase()
+        return name.includes(q) || p.user.email.toLowerCase().includes(q) || p.ticketid.toLowerCase().includes(q)
+      })
+    : participants
+
+  const handlePaymentAction = async (ticketid: string, status: 'Purchased' | 'Rejected') => {
+    setActionLoading(ticketid)
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/registrations/${ticketid}/payment/status`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ status }),
+      })
+      if (!res.ok) {
+        const data = await res.json()
+        throw new Error(data.message || 'Failed to update')
+      }
+      toast.success(status === 'Purchased' ? 'Payment approved' : 'Payment rejected')
+      onRefetch()
+    } catch (e: any) {
+      toast.error(e.message)
+    } finally {
+      setActionLoading(null)
+    }
+  }
+
+  const content = (
+    <>
+      <div className="flex items-center justify-between">
+        <h2 className="text-sm font-medium">All Registrations ({regTotal})</h2>
+        {participants.length > 0 && (
+          <Button variant="ghost" size="sm" onClick={onExport}>
+            <Download className="h-3.5 w-3.5 mr-1.5" /> Export
+          </Button>
+        )}
+      </div>
+
+      {participants.length > 0 && (
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+          <Input
+            placeholder="Search by name, email, or ticket ID..."
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            className="pl-9 h-8 text-sm"
+          />
+        </div>
+      )}
+
+      {regLoading ? (
+        <div className="space-y-2">
+          {[1, 2, 3].map(i => <Skeleton key={i} className="h-12" />)}
+        </div>
+      ) : filtered.length > 0 ? (
+        <div className="border rounded-md divide-y">
+          {filtered.map(p => (
+            <div key={p.ticketid} className="px-4 py-3 space-y-2">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center shrink-0">
+                    <Users className="h-3.5 w-3.5 text-muted-foreground" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium truncate">
+                      {p.user.firstName ? `${p.user.firstName} ${p.user.lastName || ''}`.trim() : p.user.email}
+                    </p>
+                    <p className="text-xs text-muted-foreground font-mono">{p.ticketid}</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 shrink-0">
+                  {p.formdata && p.formdata.length > 0 && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-6 px-2 text-xs text-muted-foreground"
+                      onClick={() => setExpanded(expanded === p.ticketid ? null : p.ticketid)}
+                    >
+                      {expanded === p.ticketid ? 'Hide' : 'Responses'}
+                    </Button>
+                  )}
+                  {p.checkin && <Badge variant="outline" className="text-xs">Checked in</Badge>}
+                  <Badge variant="secondary" className="text-xs capitalize">{p.status}</Badge>
+                </div>
+              </div>
+              {expanded === p.ticketid && p.formdata && p.formdata.length > 0 && (
+                <div className="pl-11 space-y-1.5 pt-1">
+                  {p.formdata.map((f: any, i: number) => {
+                    const isFile = typeof f.value === 'string' && f.value.includes('/api/upload/')
+                    return (
+                      <div key={i} className="flex items-center gap-2 text-xs">
+                        <span className="text-muted-foreground">{f.label || f.name}:</span>
+                        {isFile ? (
+                          <FileLink url={f.value} token={token} />
+                        ) : (
+                          <span className="text-foreground">{String(f.value)}</span>
+                        )}
+                      </div>
+                    )
+                  })}
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="flex flex-col items-center justify-center py-12 border rounded-md border-dashed">
+          <Users className="h-8 w-8 text-muted-foreground/40 mb-2" />
+          <p className="text-sm text-muted-foreground">No registrations yet</p>
+        </div>
+      )}
+    </>
+  )
+
+  if (!isMerch) {
+    return <div className="space-y-4">{content}</div>
+  }
+
+  return (
+    <Tabs defaultValue="all" className="space-y-4">
+      <TabsList className="bg-muted/50 p-1 h-10">
+        <TabsTrigger value="all" className="rounded-sm px-4 text-sm">All ({regTotal})</TabsTrigger>
+        <TabsTrigger value="pending" className="rounded-sm px-4 text-sm">Pending Approvals ({pending.length})</TabsTrigger>
+      </TabsList>
+
+      <TabsContent value="all" className="space-y-4">
+        {content}
+      </TabsContent>
+
+      <TabsContent value="pending" className="space-y-4">
+        <h2 className="text-sm font-medium">Pending Payment Approvals</h2>
+        {regLoading ? (
+          <div className="space-y-2">
+            {[1, 2, 3].map(i => <Skeleton key={i} className="h-24" />)}
+          </div>
+        ) : pending.length > 0 ? (
+          <div className="space-y-3">
+            {pending.map(p => (
+              <Card key={p.ticketid} className="bg-muted/20">
+                <CardContent className="py-4 space-y-3">
+                  <div className="flex items-start justify-between">
+                    <div className="space-y-1">
+                      <p className="text-sm font-medium">
+                        {p.user.firstName ? `${p.user.firstName} ${p.user.lastName || ''}`.trim() : p.user.email}
+                      </p>
+                      <p className="text-xs text-muted-foreground">{p.user.email}</p>
+                      <p className="text-xs text-muted-foreground font-mono">{p.ticketid}</p>
+                    </div>
+                    <Badge variant="secondary" className="bg-yellow-500/10 text-yellow-700 dark:text-yellow-400 border-yellow-500/20 text-xs">
+                      Pending
+                    </Badge>
+                  </div>
+
+                  {p.formdata && p.formdata.length > 0 && (
+                    <div className="flex gap-4 text-xs text-muted-foreground flex-wrap">
+                      {p.formdata.map((f: any, i: number) => {
+                        const isUrl = typeof f.value === 'string' && f.value.startsWith('http');
+                        return (
+                          <span key={i}>{f.label || f.name}: <span className="text-foreground">
+                            {isUrl ? <a href={f.value} target="_blank" rel="noreferrer" className="text-primary hover:underline">View File</a> : f.value}
+                          </span></span>
+                        )
+                      })}
+                    </div>
+                  )}
+
+                  {p.payment?.proof && (
+                    <ProofLink url={p.payment.proof} token={token} />
+                  )}
+
+                  <div className="flex gap-2 pt-1">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="h-8"
+                      disabled={actionLoading === p.ticketid}
+                      onClick={() => handlePaymentAction(p.ticketid, 'Purchased')}
+                    >
+                      {actionLoading === p.ticketid ? <Loader2 className="h-3 w-3 animate-spin mr-1.5" /> : <Check className="h-3 w-3 mr-1.5" />}
+                      Approve
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="h-8 text-destructive hover:text-destructive"
+                      disabled={actionLoading === p.ticketid}
+                      onClick={() => handlePaymentAction(p.ticketid, 'Rejected')}
+                    >
+                      <X className="h-3 w-3 mr-1.5" />
+                      Reject
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        ) : (
+          <div className="flex flex-col items-center justify-center py-12 border rounded-md border-dashed">
+            <Check className="h-8 w-8 text-muted-foreground/40 mb-2" />
+            <p className="text-sm text-muted-foreground">No pending approvals</p>
+          </div>
+        )}
+      </TabsContent>
+    </Tabs>
   )
 }
 
@@ -363,27 +634,6 @@ function EventDetails({ event: ev }: { event: event }) {
           <h2 className="text-sm font-medium mb-3">About</h2>
           <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap">{ev.description}</p>
         </div>
-        
-        {ev.type === 'Merchandise' && ev.variants && (
-          <div>
-            <h2 className="text-sm font-medium mb-3">Variants</h2>
-            <div className="border rounded-md divide-y">
-              {ev.variants.map((v, i) => (
-                <div key={i} className="flex justify-between p-3 text-sm">
-                  <span className="font-medium">{v.name}</span>
-                  <div className="flex gap-4 text-muted-foreground">
-                    <span>{v.stock} left</span>
-                    <span>₹{v.price}</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-            {ev.purchaseLimit && (
-               <p className="text-xs text-muted-foreground mt-2">Max {ev.purchaseLimit} per person</p>
-            )}
-          </div>
-        )}
-
         {ev.tags && ev.tags.length > 0 && (
           <div className="flex flex-wrap gap-1.5 pt-2">
             {ev.tags.map(tag => (
@@ -406,8 +656,6 @@ function EditForm({
   deadlineOpen, setDeadlineOpen,
   currentStatus,
   eventType,
-  variants, setVariants,
-  purchaseLimit, setPurchaseLimit,
 }: {
   description: string; setDescription: (v: string) => void
   limit: string; setLimit: (v: string) => void
@@ -418,24 +666,8 @@ function EditForm({
   deadlineOpen: boolean; setDeadlineOpen: (v: boolean) => void
   currentStatus: string
   eventType: string
-  variants: any[]; setVariants: (v: any[]) => void
-  purchaseLimit: string; setPurchaseLimit: (v: string) => void
 }) {
   const statusOptions = ['draft', 'published', 'ongoing', 'completed', 'cancelled']
-
-  const updateVariant = (index: number, key: string, val: string | number) => {
-    const newVariants = [...variants]
-    newVariants[index] = { ...newVariants[index], [key]: val }
-    setVariants(newVariants)
-  }
-
-  const addVariant = () => {
-    setVariants([...variants, { name: '', stock: 0, price: 0 }])
-  }
-
-  const removeVariant = (index: number) => {
-    setVariants(variants.filter((_, i) => i !== index))
-  }
 
   return (
     <div className="space-y-6">
@@ -450,7 +682,7 @@ function EditForm({
           />
         </Field>
 
-        <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-3 gap-4">
           <Field>
             <FieldLabel>Registration Limit</FieldLabel>
             <Input
@@ -473,18 +705,6 @@ function EditForm({
             </Field>
           )}
 
-          {eventType === 'Merchandise' && (
-             <Field>
-              <FieldLabel>Purchase Limit</FieldLabel>
-              <Input
-                type="number"
-                min="1"
-                value={purchaseLimit}
-                onChange={e => setPurchaseLimit(e.target.value)}
-              />
-            </Field>
-          )}
-
           <Field>
             <FieldLabel>Status</FieldLabel>
             <Select value={status} onValueChange={setStatus}>
@@ -499,48 +719,6 @@ function EditForm({
             </Select>
           </Field>
         </div>
-
-        {eventType === 'Merchandise' && (
-          <div className="space-y-4">
-             <div className="flex items-center justify-between">
-                <h3 className="text-sm font-medium">Variants</h3>
-                <Button size="sm" variant="outline" onClick={addVariant}>Add Variant</Button>
-             </div>
-             {variants.map((v, i) => (
-                <div key={i} className="flex gap-2 items-end">
-                  <Field className="flex-1">
-                    <FieldLabel className="text-xs">Name</FieldLabel>
-                    <Input 
-                      value={v.name} 
-                      onChange={e => updateVariant(i, 'name', e.target.value)} 
-                      placeholder="e.g. Small"
-                    />
-                  </Field>
-                  <Field className="w-20">
-                    <FieldLabel className="text-xs">Stock</FieldLabel>
-                    <Input 
-                      type="number" 
-                      min="0"
-                      value={v.stock} 
-                      onChange={e => updateVariant(i, 'stock', parseInt(e.target.value) || 0)} 
-                    />
-                  </Field>
-                  <Field className="w-24">
-                    <FieldLabel className="text-xs">Price (₹)</FieldLabel>
-                    <Input 
-                      type="number" 
-                      min="0"
-                      value={v.price} 
-                      onChange={e => updateVariant(i, 'price', parseFloat(e.target.value) || 0)} 
-                    />
-                  </Field>
-                   <Button variant="ghost" size="icon" onClick={() => removeVariant(i)} className="mb-0.5 text-destructive hover:text-destructive">
-                      <Trash2 className="h-4 w-4" />
-                   </Button>
-                </div>
-             ))}
-          </div>
-        )}
 
         <div className="flex gap-4">
           <Field className="w-56">

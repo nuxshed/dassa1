@@ -58,7 +58,7 @@ export function FloatingSidebar() {
   const { theme, setTheme } = useTheme()
   if (!user) return null
 
-  const links = (navconfig[user.role] || []).filter(l => l.href !== '/profile' && l.href !== '/organizer/profile')
+  const links = (navconfig[user.role] || []).filter(l => l.href !== '/organizer/profile')
   const initials = ((user.firstName?.[0] || '') + (user.lastName?.[0] || user.email[0])).toUpperCase()
   const profileLink = user.role === 'Participant' ? '/profile' : `/${user.role.toLowerCase()}/profile`
 

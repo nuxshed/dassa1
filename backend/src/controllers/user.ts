@@ -28,13 +28,22 @@ export const updateprofile = async (req: Request, res: Response) => {
       return res.status(400).json({ error: result.error.issues });
     }
 
-    const user = await Participant.findByIdAndUpdate(
+    const user = await Participant.findById(req.user?._id);
+    if (!user) {
+      return res.status(404).json({ message: 'not found' });
+    }
+
+    if (user.type === 'IIIT' && result.data.college && result.data.college !== user.college) {
+      return res.status(403).json({ message: 'IIIT students cannot change their college' });
+    }
+
+    const updatedUser = await Participant.findByIdAndUpdate(
       req.user?._id,
       { $set: result.data },
       { new: true, runValidators: true },
     ).select('-password');
 
-    res.json(user);
+    res.json(updatedUser);
   } catch (e) {
     res.status(500).json({ message: 'server error' });
   }

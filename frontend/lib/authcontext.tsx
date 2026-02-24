@@ -14,7 +14,7 @@ interface user {
 interface authcontx {
   user: user | null;
   token: string | null;
-  login: (token: string, user: user) => void;
+  login: (token: string, user: user, redirect?: string) => void;
   logout: () => void;
   loading: boolean;
   isauth: boolean;
@@ -45,13 +45,15 @@ export const AuthProvider = ({children}: { children: ReactNode }) => {
     setloading(false);
   }, []);
 
-  const login = (newtoken: string, userdata: user) => {
+  const login = (newtoken: string, userdata: user, redirect?: string) => {
     localStorage.setItem('token', newtoken);
     localStorage.setItem('user', JSON.stringify(userdata));
     settoken(newtoken);
     setuser(userdata);
 
-    if (userdata.role === 'Admin') {
+    if (redirect) {
+      router.push(redirect);
+    } else if (userdata.role === 'Admin') {
       router.push('/admin');
     } else if (userdata.role === 'Organizer') {
       router.push('/organizer');

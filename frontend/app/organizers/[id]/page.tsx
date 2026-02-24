@@ -29,11 +29,18 @@ export default function OrganizerDetailsPage() {
   const upcomingEvents = events.filter(e => e.status === 'published' || e.status === 'ongoing')
   const pastEvents = events.filter(e => e.status === 'completed')
 
+  const { data: profile, refetch: refetchProfile } = usefetch<{ following?: (string | { _id: string })[] }>('/api/users/me', { skip: user?.role !== 'Participant' })
+
+  const isFollowing = (() => {
+    if (!profile?.following || !id) return false
+    return profile.following.some(f => (typeof f === 'string' ? f : f._id) === id)
+  })()
+
   const { mutate: toggleFollow, loading: followLoading } = usemutation(`/api/organizers/${id}/follow`, {
     method: 'POST',
     onsuccess: () => {
-      toast.success('Updated')
-      window.location.reload()
+      toast.success(isFollowing ? 'Unfollowed' : 'Followed')
+      refetchProfile()
     }
   })
 
@@ -79,12 +86,12 @@ export default function OrganizerDetailsPage() {
             
             {user?.role === 'Participant' && (
               <Button 
-                variant="outline" 
+                variant={isFollowing ? 'secondary' : 'outline'}
                 size="sm" 
                 onClick={handleFollow}
                 disabled={followLoading}
               >
-                {followLoading ? 'Processing...' : 'Follow'}
+                {followLoading ? 'Processing...' : isFollowing ? 'Unfollow' : 'Follow'}
               </Button>
             )}
           </div>
@@ -196,7 +203,7 @@ function EventItem({ event }: { event: event }) {
 
 function OrganizerSkeleton() {
   return (
-    <AppLayout roles={['Participant']}>
+    <AppLayout roles={['Participant', 'Organizer', 'Admin']}>
       <div className="max-w-4xl mx-auto px-8 md:px-12 py-8">
         <div className="space-y-6 mb-8">
           <div className="flex items-start gap-4">

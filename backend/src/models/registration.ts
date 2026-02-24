@@ -6,6 +6,8 @@ export interface IRegistration extends Document {
   status: 'Registered' | 'Pending' | 'Purchased' | 'Rejected' | 'Cancelled';
   ticketid: string;
   checkin: boolean;
+  checkinat?: Date;
+  checkinlog: { action: string; reason?: string; by: mongoose.Types.ObjectId; at: Date }[];
   formdata?: any[];
   payment?: {
     proof: string;
@@ -25,6 +27,8 @@ const registrationschema = new Schema<IRegistration>({
   },
   ticketid: { type: String, required: true, unique: true },
   checkin: { type: Boolean, default: false },
+  checkinat: { type: Date },
+  checkinlog: [{ action: String, reason: String, by: { type: Schema.Types.ObjectId, ref: 'User' }, at: { type: Date, default: Date.now } }],
   formdata: { type: Schema.Types.Mixed },
   payment: {
     proof: { type: String },
@@ -32,7 +36,7 @@ const registrationschema = new Schema<IRegistration>({
   }
 }, { timestamps: true });
 
-registrationschema.index({ user: 1, event: 1 }, { unique: true });
+registrationschema.index({ user: 1, event: 1 });
 registrationschema.index({ event: 1, status: 1 });
 registrationschema.index({ ticketid: 1 });
 

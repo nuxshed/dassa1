@@ -3,7 +3,7 @@ import { z } from 'zod'
 export const role = z.enum(['Participant', 'Organizer', 'Admin'])
 export const eventstatus = z.enum(['draft', 'published', 'ongoing', 'completed', 'cancelled'])
 export const eventtype = z.enum(['Normal', 'Merchandise'])
-export const regstatus = z.enum(['Registered', 'Pending', 'Confirmed', 'Cancelled'])
+export const regstatus = z.enum(['Registered', 'Pending', 'Confirmed', 'Purchased', 'Rejected', 'Cancelled'])
 export const eligibility = z.enum(['all', 'iiit', 'external'])
 
 export type role = z.infer<typeof role>
@@ -22,7 +22,7 @@ export const userschema = z.object({
   college: z.string().optional(),
   type: z.enum(['IIIT', 'External']).optional(),
   interests: z.array(z.string()).optional(),
-  following: z.array(z.string()).optional(),
+  following: z.array(z.union([z.string(), z.object({ _id: z.string(), name: z.string(), category: z.string().optional() })])).optional(),
 })
 
 export type user = z.infer<typeof userschema>
@@ -33,6 +33,7 @@ export const organizerschema = z.object({
   category: z.string(),
   description: z.string().optional(),
   email: z.string(),
+  contactEmail: z.string().optional(),
   contact: z.string().optional(),
   followers: z.number().optional(),
   disabled: z.boolean().optional(),
@@ -58,12 +59,12 @@ export const eventschema = z.object({
   fee: z.number().optional(),
   tags: z.array(z.string()).optional(),
 
-  variants: z.array(z.object({
-    name: z.string(),
+  item: z.object({
+    sizes: z.array(z.string()),
+    colors: z.array(z.string()),
     stock: z.number(),
-    price: z.number(),
-  })).optional(),
-  purchaseLimit: z.number().optional(),
+    limit: z.number(),
+  }).optional(),
 })
 
 export type event = z.infer<typeof eventschema>
@@ -75,6 +76,10 @@ export const registrationschema = z.object({
   participant: z.union([z.string(), userschema]),
   status: regstatus,
   formdata: z.record(z.string(), z.any()).optional(),
+  payment: z.object({
+    proof: z.string(),
+    uploadedat: z.string(),
+  }).optional(),
   createdAt: z.string(),
 })
 

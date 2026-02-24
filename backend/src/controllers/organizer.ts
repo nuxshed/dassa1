@@ -70,6 +70,7 @@ const updateschema = z.object({
   name: z.string().min(1).optional(),
   category: z.string().min(1).optional(),
   description: z.string().optional(),
+  contactEmail: z.string().email().optional(),
   contact: z.string().min(10).optional(),
 });
 

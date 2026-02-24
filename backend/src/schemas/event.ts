@@ -57,7 +57,7 @@ export const updateventschema = z.object({
 export const formschema = z.object({
   fields: z.array(z.object({
     label: z.string().min(1),
-    type: z.enum(['text', 'email', 'number', 'select', 'file', 'textarea']),
+    type: z.enum(['text', 'email', 'number', 'select', 'file', 'textarea', 'checkbox']),
     required: z.boolean().default(false),
     options: z.array(z.string()).optional()
   })).min(1)

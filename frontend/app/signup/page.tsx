@@ -1,27 +1,31 @@
 "use client";
 
 import { FerrisWheel } from "lucide-react"
-import { useEffect } from "react"
+import { useEffect, useRef } from "react"
 import { useRouter } from "next/navigation"
 import { SignupForm } from "@/components/signup-form"
 import { ModeToggle } from "@/components/mode-toggle"
 import { useauth } from "@/lib/authcontext"
 
 export default function SignupPage() {
-  const { user } = useauth();
+  const { user, loading } = useauth();
   const router = useRouter();
+  const checked = useRef(false);
 
   useEffect(() => {
-    if (user) {
-      if (user.role === 'Admin') {
-        router.push('/admin');
-      } else if (user.role === 'Organizer') {
-        router.push('/organizer');
-      } else {
-        router.push('/dashboard');
+    if (!loading && !checked.current) {
+      if (user) {
+        if (user.role === 'Admin') {
+          router.push('/admin');
+        } else if (user.role === 'Organizer') {
+          router.push('/organizer');
+        } else {
+          router.push('/dashboard');
+        }
       }
+      checked.current = true;
     }
-  }, [user, router]);
+  }, [user, loading, router]); // Dependencies kept for correctness, but logic guarded by ref
 
   return (
     <div className="bg-dark flex min-h-svh flex-col items-center justify-center gap-6 p-6 md:p-10">
